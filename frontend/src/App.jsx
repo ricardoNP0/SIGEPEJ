@@ -1,71 +1,287 @@
-const roles = [
-  "Estudiante",
-  "Docente",
-  "Director de Carrera",
-  "Secretario Académico",
-  "Administrador",
+import { Navigate, Route, Routes } from "react-router-dom";
+import {
+  Activity,
+  ArrowRight,
+  Bell,
+  CheckCircle2,
+  Clock3,
+  FileText,
+  ShieldCheck,
+  UsersRound,
+} from "lucide-react";
+import { AppLayout } from "./layouts/AppLayout.jsx";
+
+const stats = [
+  { label: "Solicitudes pendientes", value: "18", detail: "Requieren revision", icon: Clock3 },
+  { label: "Aprobadas esta semana", value: "34", detail: "Con registro de auditoria", icon: CheckCircle2 },
+  { label: "Licencias aplicadas", value: "27", detail: "Marcadas como L", icon: ShieldCheck },
+  { label: "Usuarios demo", value: "9", detail: "Base seed cargada", icon: UsersRound },
 ];
 
-const modules = [
-  "Autenticación por roles",
-  "Solicitudes de ausencia",
-  "Revisión y aprobación",
-  "Asistencia P/F/L",
-  "Notificaciones",
-  "Auditoría",
-  "Reportes",
+const recentRequests = [
+  {
+    code: "SOL-2026-014",
+    owner: "Ana Rojas",
+    type: "Ausencia estudiantil",
+    status: "Pendiente",
+    date: "2026-06-05",
+  },
+  {
+    code: "SOL-2026-013",
+    owner: "Carlos Mendez",
+    type: "Permiso docente",
+    status: "Observada",
+    date: "2026-06-06",
+  },
+  {
+    code: "SOL-2026-012",
+    owner: "Ricardo Nunez",
+    type: "Justificacion",
+    status: "Aprobada",
+    date: "2026-06-03",
+  },
 ];
+
+const pageDetails = {
+  "/mis-solicitudes": {
+    title: "Mis solicitudes",
+    eyebrow: "Estudiante",
+    description:
+      "Historial de permisos, justificaciones, observaciones y respuestas emitidas por Direccion de Carrera.",
+    actions: ["Ver estado", "Corregir observada", "Consultar evidencia"],
+  },
+  "/nueva-solicitud": {
+    title: "Nueva solicitud estudiantil",
+    eyebrow: "Formulario",
+    description:
+      "Formulario base para registrar una ausencia, seleccionar materia, fecha, motivo y evidencia cuando corresponda.",
+    actions: ["Buscar estudiante", "Seleccionar materia", "Adjuntar evidencia"],
+  },
+  "/solicitud-docente": {
+    title: "Solicitud docente",
+    eyebrow: "Docente",
+    description:
+      "Pantalla para que un docente solicite ausencia por una o varias materias, una fecha o rangos de fechas.",
+    actions: ["Elegir curso", "Definir fechas", "Notificar estudiantes"],
+  },
+  "/revision": {
+    title: "Bandeja de revision",
+    eyebrow: "Direccion",
+    description:
+      "Cola de solicitudes pendientes, observadas y apeladas para aprobar, rechazar u observar con comentario obligatorio.",
+    actions: ["Aprobar", "Observar", "Rechazar"],
+  },
+  "/asistencia": {
+    title: "Control de asistencia",
+    eyebrow: "Docente",
+    description:
+      "Lista de estudiantes inscritos por materia y paralelo. Permite registrar P/F; las licencias L solo se aplican por solicitud aprobada.",
+    actions: ["Elegir materia", "Registrar asistencia", "Ver licencias"],
+  },
+  "/notificaciones": {
+    title: "Notificaciones",
+    eyebrow: "Seguimiento",
+    description:
+      "Avisos de aprobacion, rechazo, observaciones, apelaciones y solicitudes pendientes segun el rol activo.",
+    actions: ["Ver detalle", "Marcar como leida", "Abrir solicitud"],
+  },
+  "/reportes": {
+    title: "Reportes",
+    eyebrow: "Analitica",
+    description:
+      "Reportes por carrera, materia, estado, docente, estudiante y periodo academico para la defensa del proyecto.",
+    actions: ["Filtrar", "Exportar", "Ver indicadores"],
+  },
+  "/catalogos": {
+    title: "Catalogos academicos",
+    eyebrow: "Base institucional",
+    description:
+      "Pantallas placeholder para carreras, materias, cursos, paralelos, docentes e inscripciones simuladas.",
+    actions: ["Carreras", "Materias", "Inscripciones"],
+  },
+  "/usuarios": {
+    title: "Usuarios y roles",
+    eyebrow: "Administrador",
+    description:
+      "Administracion visual de estudiantes, docentes, directores, secretarios y permisos de acceso.",
+    actions: ["Crear usuario", "Asignar rol", "Bloquear acceso"],
+  },
+  "/auditoria": {
+    title: "Auditoria",
+    eyebrow: "Trazabilidad",
+    description:
+      "Historial de aprobaciones, cambios de estado, fecha, hora, usuario responsable y motivo de cada accion critica.",
+    actions: ["Ver evento", "Filtrar usuario", "Revisar cambios"],
+  },
+};
+
+function DashboardPage() {
+  return (
+    <section className="content-stack">
+      <div className="page-heading">
+        <span className="eyebrow">Resumen general</span>
+        <h1>Panel SIGEPEJ</h1>
+        <p>
+          Base visual para que el equipo conecte solicitudes, asistencia,
+          notificaciones, auditoria y reportes sin rehacer la navegacion.
+        </p>
+      </div>
+
+      <div className="stat-grid">
+        {stats.map((item) => {
+          const Icon = item.icon;
+          return (
+            <article className="stat-card" key={item.label}>
+              <div className="icon-box">
+                <Icon size={20} aria-hidden="true" />
+              </div>
+              <div>
+                <strong>{item.value}</strong>
+                <span>{item.label}</span>
+                <small>{item.detail}</small>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      <div className="dashboard-grid">
+        <section className="surface-panel">
+          <div className="panel-header">
+            <div>
+              <span className="eyebrow">Actividad</span>
+              <h2>Solicitudes recientes</h2>
+            </div>
+            <button className="ghost-button" type="button">
+              Ver todo
+              <ArrowRight size={16} aria-hidden="true" />
+            </button>
+          </div>
+
+          <div className="table-like" role="table" aria-label="Solicitudes recientes">
+            {recentRequests.map((request) => (
+              <div className="table-row" role="row" key={request.code}>
+                <div>
+                  <strong>{request.code}</strong>
+                  <span>{request.owner}</span>
+                </div>
+                <div>
+                  <span>{request.type}</span>
+                  <small>{request.date}</small>
+                </div>
+                <span className={`status-pill ${request.status.toLowerCase()}`}>
+                  {request.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="surface-panel">
+          <div className="panel-header">
+            <div>
+              <span className="eyebrow">Conexion</span>
+              <h2>Backend configurado</h2>
+            </div>
+            <Activity size={22} className="muted-icon" aria-hidden="true" />
+          </div>
+          <div className="connection-box">
+            <span>API local</span>
+            <code>{import.meta.env.VITE_API_URL}</code>
+          </div>
+          <p className="panel-copy">
+            Esta T01 solo arma el layout. Las tareas siguientes deben conectar
+            login, solicitudes, revision y asistencia usando esta misma base.
+          </p>
+        </section>
+      </div>
+    </section>
+  );
+}
+
+function PlaceholderPage({ details }) {
+  return (
+    <section className="content-stack">
+      <div className="page-heading">
+        <span className="eyebrow">{details.eyebrow}</span>
+        <h1>{details.title}</h1>
+        <p>{details.description}</p>
+      </div>
+
+      <div className="placeholder-layout">
+        <section className="surface-panel">
+          <div className="panel-header">
+            <div>
+              <span className="eyebrow">Pendiente de desarrollo</span>
+              <h2>Estructura inicial</h2>
+            </div>
+            <FileText size={22} className="muted-icon" aria-hidden="true" />
+          </div>
+          <p className="panel-copy">
+            Esta pantalla ya esta enrutada y lista para que el responsable de la
+            tarea agregue formularios, tablas, consumo de API y validaciones.
+          </p>
+          <div className="action-list">
+            {details.actions.map((action) => (
+              <button className="secondary-action" type="button" key={action}>
+                {action}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <aside className="surface-panel guidance-panel">
+          <Bell size={22} className="muted-icon" aria-hidden="true" />
+          <h2>Regla de integracion</h2>
+          <p>
+            No duplicar sidebar ni topbar. Cada modulo debe trabajar dentro de
+            esta zona de contenido para mantener consistencia entre roles.
+          </p>
+        </aside>
+      </div>
+    </section>
+  );
+}
+
+function LoginPlaceholder() {
+  return (
+    <main className="login-screen">
+      <section className="login-panel">
+        <span className="brand-mark">UV</span>
+        <div>
+          <span className="eyebrow">Acceso visual</span>
+          <h1>SIGEPEJ</h1>
+          <p>
+            Placeholder de login. La autenticacion real se implementara en la
+            tarea correspondiente; por ahora el cambio de rol esta dentro del
+            panel principal.
+          </p>
+        </div>
+        <a className="primary-link" href="/dashboard">
+          Entrar al panel
+          <ArrowRight size={18} aria-hidden="true" />
+        </a>
+      </section>
+    </main>
+  );
+}
 
 export default function App() {
   return (
-    <main className="app-shell">
-      <section className="hero">
-        <div className="brand">
-          <span className="brand-mark">UV</span>
-          <div>
-            <strong>SIGEPEJ</strong>
-            <small>Sistema de Gestión de Solicitudes de Ausencia</small>
-          </div>
-        </div>
-        <div className="hero-copy">
-          <h1>Base frontend lista para trabajar.</h1>
-          <p>
-            Esta pantalla solo confirma que React y Vite arrancan correctamente.
-            Las pantallas reales deben implementarse desde el mockup ubicado en
-            la carpeta preview.
-          </p>
-        </div>
-      </section>
-
-      <section className="workspace">
-        <div className="panel">
-          <h2>Roles del sistema</h2>
-          <div className="list">
-            {roles.map((role) => (
-              <span key={role} className="chip">
-                {role}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="panel">
-          <h2>Módulos pendientes</h2>
-          <ul>
-            {modules.map((module) => (
-              <li key={module}>{module}</li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="panel full">
-          <h2>Conexión backend</h2>
-          <p>
-            API configurada en <code>{import.meta.env.VITE_API_URL}</code>.
-            Probar el backend en <code>http://localhost:5000/api/health</code>.
-          </p>
-        </div>
-      </section>
-    </main>
+    <Routes>
+      <Route path="/login" element={<LoginPlaceholder />} />
+      <Route element={<AppLayout />}>
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        {Object.entries(pageDetails).map(([path, details]) => (
+          <Route
+            key={path}
+            path={path.slice(1)}
+            element={<PlaceholderPage details={details} />}
+          />
+        ))}
+      </Route>
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
 }
