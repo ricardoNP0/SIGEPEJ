@@ -39,7 +39,12 @@ const requestSchema = new mongoose.Schema(
     },
     dates: { type: [requestDateSchema], validate: (value) => value.length > 0 },
     courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
-    evidenceRequired: { type: Boolean, default: false },
+    evidenceRequired: { type: Boolean, default: false },  
+    evidence: {
+  url: { type: String },
+  localPath: { type: String },
+  originalName: { type: String }
+},
     currentReviewer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     reviewer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     reviewedAt: { type: Date },

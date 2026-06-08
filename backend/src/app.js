@@ -42,6 +42,10 @@ export function createApp() {
   // Rutas API
   app.use("/api/health", healthRoutes);
   app.use("/api/requests", requestRoutes);
+  app.use(
+  "/uploads",
+  express.static(path.resolve("uploads"))
+);
 
   // 404
   app.use((req, res) => {
