@@ -2,18 +2,35 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import path from "path";
+
 import { env } from "./config/env.js";
+
 import healthRoutes from "./routes/healthRoutes.js";
+import requestRoutes from "./routes/requestRoutes.js";
 
 export function createApp() {
   const app = express();
 
+  // Middlewares globales
   app.use(helmet());
-  app.use(cors({ origin: env.frontendUrl, credentials: true }));
+
+  app.use(
+    cors({
+      origin: env.frontendUrl,
+      credentials: true,
+    })
+  );
+
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true }));
-  app.use("/uploads", express.static(path.resolve("uploads")));
 
+  // Archivos estáticos
+  app.use(
+    "/uploads",
+    express.static(path.resolve("uploads"))
+  );
+
+  // Ruta principal
   app.get("/", (req, res) => {
     res.json({
       name: "SIGEPEJ API",
@@ -22,10 +39,15 @@ export function createApp() {
     });
   });
 
+  // Rutas API
   app.use("/api/health", healthRoutes);
+  app.use("/api/requests", requestRoutes);
 
+  // 404
   app.use((req, res) => {
-    res.status(404).json({ message: "Ruta no encontrada" });
+    res.status(404).json({
+      message: "Ruta no encontrada",
+    });
   });
 
   return app;
