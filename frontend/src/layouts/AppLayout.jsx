@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useContext } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3,
@@ -17,7 +17,8 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { menuByRole, roleOptions, usersByRole } from "../routes/menuConfig.js";
+import { menuByRole } from "../routes/menuConfig.js";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 const icons = {
   dashboard: Gauge,
@@ -34,34 +35,47 @@ const icons = {
 };
 
 export function AppLayout() {
-  const [activeRole, setActiveRole] = useState("estudiante");
+  const { user, loading, logout, activeRole } = useContext(AuthContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const menuItems = menuByRole[activeRole];
-  const currentUser = usersByRole[activeRole];
+
+  const menuItems = useMemo(() => {
+    return menuByRole[activeRole || "estudiante"] || [];
+  }, [activeRole]);
+
+  const currentUser = useMemo(() => {
+    if (!user) return { initials: "US", name: "Usuario", role: "Cargando..." };
+    return {
+      initials: `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() || "U",
+      name: `${user.firstName} ${user.lastName}`,
+      role: user.role.charAt(0).toUpperCase() + user.role.slice(1),
+    };
+  }, [user]);
 
   const currentTitle = useMemo(() => {
     const found = Object.values(menuByRole)
       .flat()
       .find((item) => item.path === location.pathname);
-
     return found?.label ?? "Panel";
   }, [location.pathname]);
 
   useEffect(() => {
+    if (loading) return;
+    if (!user) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    const isDashboard = location.pathname === "/dashboard";
     const allowed = menuItems.some((item) => item.path === location.pathname);
 
-    if (!allowed && location.pathname !== "/dashboard") {
-      navigate(menuItems[0].path, { replace: true });
+    if (!allowed && !isDashboard) {
+      if (menuItems.length > 0) {
+        navigate(menuItems[0].path, { replace: true });
+      }
     }
-  }, [activeRole, location.pathname, menuItems, navigate]);
-
-  function handleRoleChange(event) {
-    const nextRole = event.target.value;
-    setActiveRole(nextRole);
-    navigate(menuByRole[nextRole][0].path);
-  }
+  }, [user, loading, location.pathname, menuItems, navigate]);
 
   return (
     <div className="app-frame">
@@ -84,15 +98,16 @@ export function AppLayout() {
           </button>
         </div>
 
-        <div className="role-picker">
-          <label htmlFor="active-role">Rol activo</label>
-          <select id="active-role" value={activeRole} onChange={handleRoleChange}>
-            {roleOptions.map((role) => (
-              <option value={role.value} key={role.value}>
-                {role.label}
-              </option>
-            ))}
-          </select>
+        <div className="role-picker" style={{ padding: "8px 12px", background: "rgba(255,255,255,0.05)", borderRadius: "8px" }}>
+          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", fontWeight: "700" }}>
+            Sesión Activa
+          </span>
+          <div style={{ fontSize: "14px", fontWeight: "600", marginTop: "2px" }}>
+            {currentUser.role}
+          </div>
+          <div style={{ fontSize: "12px", color: "var(--uv-gold-500)", marginTop: "1px" }}>
+            Cód: {user?.code || "N/A"}
+          </div>
         </div>
 
         <nav className="nav-list" aria-label="Menu principal">
@@ -120,7 +135,7 @@ export function AppLayout() {
               <small>{currentUser.role}</small>
             </div>
           </div>
-          <NavLink className="logout-link" to="/login">
+          <NavLink className="logout-link" to="/login" onClick={logout}>
             <LogOut size={18} aria-hidden="true" />
             Cerrar sesion
           </NavLink>
