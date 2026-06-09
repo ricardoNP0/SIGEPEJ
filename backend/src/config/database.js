@@ -2,7 +2,7 @@ import dns from "dns";
 import mongoose from "mongoose";
 import { env } from "./env.js";
 
-// Override DNS resolution to use Google DNS (fixes querySrv ECONNREFUSED on local network)
+// Usa DNS de Google para resolver SRV de MongoDB Atlas en redes locales restrictivas
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 export async function connectDatabase() {

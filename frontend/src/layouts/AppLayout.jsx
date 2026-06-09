@@ -17,7 +17,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { menuByRole, roleOptions, usersByRole } from "../routes/menuConfig.js";
+import { menuByRole } from "../routes/menuConfig.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 
 const icons = {
@@ -57,7 +57,6 @@ export function AppLayout() {
     const found = Object.values(menuByRole)
       .flat()
       .find((item) => item.path === location.pathname);
-
     return found?.label ?? "Panel";
   }, [location.pathname]);
 
@@ -99,8 +98,8 @@ export function AppLayout() {
           </button>
         </div>
 
-        <div className="role-picker" style={{ padding: "8px 12px", background: "rgba(255, 255, 255, 0.05)", borderRadius: "8px" }}>
-          <span style={{ fontSize: "11px", color: "rgba(255, 255, 255, 0.6)", textTransform: "uppercase", fontWeight: "700" }}>
+        <div className="role-picker" style={{ padding: "8px 12px", background: "rgba(255,255,255,0.05)", borderRadius: "8px" }}>
+          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", fontWeight: "700" }}>
             Sesión Activa
           </span>
           <div style={{ fontSize: "14px", fontWeight: "600", marginTop: "2px" }}>

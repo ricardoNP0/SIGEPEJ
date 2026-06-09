@@ -209,12 +209,11 @@ export const apiClient = {
         return await response.json();
       }
 
-      // If backend responded with error status
       const errData = await response.json().catch(() => ({}));
       throw new Error(errData.message || "Error al iniciar sesion");
     } catch (error) {
       console.warn("Backend login failed or unavailable, falling back to mock database:", error.message);
-      
+
       // Fallback Mock Authentication
       const user = MOCK_USERS.find(
         (u) =>
@@ -223,7 +222,6 @@ export const apiClient = {
       );
 
       if (user) {
-        // Return simulated JWT token and user info
         return {
           token: "mock-jwt-token-sigepej-2026",
           user: {
@@ -238,7 +236,7 @@ export const apiClient = {
         };
       }
 
-      throw new Error("Credenciales incorrectas (para demo use password123)");
+      throw new Error("Credenciales incorrectas. Verifique su usuario y contrasena.");
     }
   },
 
@@ -252,11 +250,9 @@ export const apiClient = {
       throw new Error("API error fetching courses");
     } catch (error) {
       console.warn("Backend getMyCourses failed, using mock data:", error.message);
-      // Filter mock courses based on user role
       if (role === "docente") {
         return MOCK_COURSES.filter((c) => c.teacherUsername === username);
       } else {
-        // Students are enrolled in all demo courses
         return MOCK_COURSES;
       }
     }
@@ -272,7 +268,6 @@ export const apiClient = {
       throw new Error("API error fetching requests");
     } catch (error) {
       console.warn("Backend getMyRequests failed, using mock data:", error.message);
-      // Filter by requester username
       const requests = getMockRequests();
       return requests.filter((r) => r.requesterUsername === username);
     }
@@ -283,37 +278,33 @@ export const apiClient = {
     try {
       const response = await fetch(`${API_URL}/requests`, {
         method: "POST",
-        headers: getHeaders(true), // multipart/form-data
+        headers: getHeaders(true),
         body: formData
       });
       if (response.ok) return await response.json();
       throw new Error("API error creating request");
     } catch (error) {
       console.warn("Backend createRequest failed, saving to mock data:", error.message);
-      
-      // Parse formData manually to store in mock DB
+
       const requestType = formData.get("requestType");
       const mode = formData.get("mode");
       const reasonType = formData.get("reasonType");
       const reasonDetail = formData.get("reasonDetail");
       const requesterRole = formData.get("requesterRole") || "estudiante";
-      
-      // Handle file simulation
+
       const file = formData.get("evidence");
       let evidenceUrl = "";
       let evidenceName = "";
       if (file && file instanceof File && file.size > 0) {
-        evidenceUrl = URL.createObjectURL(file); // Temporary blob URL for client visualization
+        evidenceUrl = URL.createObjectURL(file);
         evidenceName = file.name;
       }
 
-      // Parse dates and courses
       let datesStr = formData.get("dates");
       let dates = [];
       try {
         dates = JSON.parse(datesStr);
       } catch (e) {
-        // If not JSON format, try reading fields
         const singleDate = formData.get("date");
         const singleCourse = formData.get("course");
         if (singleDate && singleCourse) {
@@ -322,9 +313,7 @@ export const apiClient = {
         }
       }
 
-      // Map course codes
       const courses = dates.map(d => d.courseCode);
-
       const requests = getMockRequests();
       const currentUser = JSON.parse(localStorage.getItem("sigepej_user")) || {};
       const newCode = `SOL-2026-${String(requests.length + 1).padStart(3, "0")}`;
@@ -348,7 +337,7 @@ export const apiClient = {
         evidenceName
       };
 
-      requests.unshift(newRequest); // Add to beginning
+      requests.unshift(newRequest);
       saveMockRequests(requests);
       return { ok: true, request: newRequest };
     }
@@ -366,7 +355,7 @@ export const apiClient = {
       throw new Error("API error updating request");
     } catch (error) {
       console.warn("Backend updateRequest failed, updating mock data:", error.message);
-      
+
       const requests = getMockRequests();
       const idx = requests.findIndex(r => r.id === id || r.code === id);
       if (idx !== -1) {
@@ -375,10 +364,9 @@ export const apiClient = {
           requests[idx].evidenceUrl = URL.createObjectURL(file);
           requests[idx].evidenceName = file.name;
         }
-        
         requests[idx].reasonDetail = formData.get("reasonDetail") || requests[idx].reasonDetail;
-        requests[idx].status = "pendiente"; // changes back to pending
-        requests[idx].reviewComment = ""; // clear comment
+        requests[idx].status = "pendiente";
+        requests[idx].reviewComment = "";
         saveMockRequests(requests);
         return { ok: true, request: requests[idx] };
       }
@@ -398,12 +386,12 @@ export const apiClient = {
       throw new Error("API error appealing request");
     } catch (error) {
       console.warn("Backend appealRequest failed, updating mock data:", error.message);
-      
+
       const requests = getMockRequests();
       const idx = requests.findIndex(r => r.id === id || r.code === id);
       if (idx !== -1) {
-        requests[idx].status = "pendiente"; // Sent back as pending
-        requests[idx].reasonDetail = `${requests[idx].reasonDetail}\n[APELACIÓN]: ${justification}`;
+        requests[idx].status = "pendiente";
+        requests[idx].reasonDetail = `${requests[idx].reasonDetail}\n[APELACION]: ${justification}`;
         requests[idx].reviewComment = "";
         saveMockRequests(requests);
         return { ok: true, request: requests[idx] };
