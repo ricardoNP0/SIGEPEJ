@@ -1,0 +1,26 @@
+﻿T01 - Crear layout frontend por roles
+T02 - Implementar login frontend
+T03 - Documentar API inicial y usuarios de prueba
+T04 - Backend para crear solicitudes de ausencia
+T05 - Backend para subir evidencias
+T06 - Frontend formulario de solicitud estudiantil
+T07 - Frontend formulario de solicitud docente
+T08 - Historial de solicitudes
+T09 - Bandeja de revision del Director
+T10 - Backend revision de solicitudes
+T11 - Correccion de solicitudes observadas
+T12 - Apelacion de solicitudes rechazadas
+T13 - Backend asistencia por materia y fecha
+T14 - Frontend registro de asistencia docente
+T15 - Servicio de impacto por aprobacion estudiantil
+T16 - Servicio de impacto por ausencia docente
+T17 - Transaccion de aprobacion
+T18 - Backend notificaciones
+T19 - Frontend notificaciones
+T20 - Administracion de catalogos
+T21 - Auditoria automatica y vista de auditoria
+T22 - Reportes
+T23 - Pruebas de API
+T24 - Pruebas de reglas de negocio
+T25 - Integracion final frontend/backend
+T26 - README final, demo y exposicion

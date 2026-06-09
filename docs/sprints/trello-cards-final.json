@@ -1,0 +1,448 @@
+[
+  {
+    "title": "T01 - Crear layout frontend por roles",
+    "responsible": "Frontend 1",
+    "description": "Esta tarea crea la estructura visual base del frontend. Debe existir un layout con sidebar, topbar y zona de contenido. Cada rol debe tener su menu correspondiente. No se implementa logica de solicitudes todavia; solo la navegacion, rutas protegidas visualmente y pantallas placeholder. Usar como guia el mockup de `preview/index.html`.",
+    "checklist": [
+      "Crear `frontend/src/layouts/AppLayout.jsx`.",
+      "Crear sidebar.",
+      "Crear topbar.",
+      "Crear menu por rol.",
+      "Crear rutas base.",
+      "Crear paginas placeholder.",
+      "Aplicar colores azul/dorado.",
+      "Hacer responsive basico.",
+      "Agregar opcion cerrar sesion visual."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Abrir frontend/src/layouts.\n2. Crear AppLayout.jsx.\n3. Revisar preview/index.html para copiar la idea visual.\n4. Crear un array de menus por rol:\n   estudiante, docente, director, secretario, administrador.\n5. Crear sidebar con los items del rol actual.\n6. Crear topbar con nombre del usuario y rol.\n7. Crear paginas placeholder en frontend/src/features.\n8. Usar React Router para navegar.\n9. No conectar APIs todavia, solo estructura.\n10. Ejecutar npm run dev y revisar en navegador."
+  },
+  {
+    "title": "T02 - Implementar login frontend",
+    "responsible": "Frontend 1",
+    "description": "Esta tarea crea la pantalla de login y la conecta con el backend. El usuario debe ingresar correo o username y password. Si el backend responde bien, se guarda el token y se redirige al panel segun rol. Si falla, se muestra un mensaje claro. Esta tarea depende de que el backend de login ya este listo.",
+    "checklist": [
+      "Crear pantalla `LoginPage.jsx`.",
+      "Crear formulario con identifier y password.",
+      "Consumir `POST /api/auth/login`.",
+      "Guardar token en localStorage.",
+      "Guardar usuario en contexto.",
+      "Crear `AuthContext`.",
+      "Redirigir segun rol.",
+      "Mostrar errores.",
+      "Crear cierre de sesion."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Trabajar en frontend/src/features/auth.\n2. Crear LoginPage.jsx.\n3. Crear AuthContext.jsx en frontend/src/context.\n4. El formulario debe tener usuario/correo y password.\n5. Al enviar, hacer fetch a:\n   ${VITE_API_URL}/auth/login\n6. Si responde token, guardarlo en localStorage.\n7. Guardar tambien el usuario devuelto.\n8. Redirigir:\n   estudiante -> historial o dashboard\n   docente -> asistencia o dashboard\n   director -> bandeja\n   secretario -> seguimiento\n   administrador -> administracion\n9. Si falla, mostrar mensaje debajo del formulario.\n10. Crear funcion logout que borre localStorage."
+  },
+  {
+    "title": "T03 - Documentar API inicial y usuarios de prueba",
+    "responsible": "QA / Documentacion",
+    "description": "Esta tarea documenta lo necesario para que todos prueben igual: endpoint de health, login, usuarios demo, roles y comandos. La documentacion debe ser corta pero util. No debe ser teoria extensa; debe servir para ejecutar y probar.",
+    "checklist": [
+      "Crear `docs/api/health.md`.",
+      "Crear `docs/api/auth.md`.",
+      "Crear `docs/api/usuarios-demo.md`.",
+      "Agregar ejemplos de login.",
+      "Agregar respuestas esperadas.",
+      "Agregar comandos backend.",
+      "Agregar comandos frontend.",
+      "Confirmar que usuarios coincidan con seed."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Entrar a docs/api.\n2. Crear health.md con GET /api/health.\n3. Crear auth.md con POST /api/auth/login y GET /api/auth/me.\n4. Crear usuarios-demo.md con correo, username, password y rol.\n5. Para cada endpoint poner:\n   metodo, URL, body de ejemplo y respuesta esperada.\n6. Probar los endpoints antes de documentarlos.\n7. Si cambia el seed, actualizar usuarios-demo.md."
+  },
+  {
+    "title": "T04 - Backend para crear solicitudes de ausencia",
+    "responsible": "Backend 1",
+    "description": "Esta tarea crea el endpoint que permite registrar solicitudes de ausencia. La solicitud puede ser de estudiante o de docente, pero se guarda en el mismo modelo. El backend debe validar fechas, motivo, materias afectadas y usuario autenticado. El estado inicial siempre debe ser `pendiente`. Al crear la solicitud tambien debe generarse auditoria y notificacion para Direccion.",
+    "checklist": [
+      "Crear `requestController`.",
+      "Crear `requestRoutes`.",
+      "Crear `POST /api/requests`.",
+      "Validar usuario autenticado.",
+      "Validar fechas.",
+      "Validar materias.",
+      "Validar motivo.",
+      "Determinar modalidad automaticamente.",
+      "Guardar estado `pendiente`.",
+      "Crear auditoria.",
+      "Crear notificacion para Director.",
+      "Registrar ruta en app.js."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Crear backend/src/controllers/requestController.js.\n2. Crear backend/src/routes/requestRoutes.js.\n3. Proteger la ruta con authMiddleware.\n4. No recibir requesterId desde el body; usar req.user._id.\n5. Recibir motiveId, dates, courseIds, detail y evidence si existe.\n6. Validar que dates no este vacio.\n7. Si todas las fechas son futuras, guardar mode \"permiso anticipado\".\n8. Si hay fechas pasadas, guardar mode \"justificacion posterior\".\n9. Guardar status \"pendiente\".\n10. Crear AuditLog con accion \"crear_solicitud\".\n11. Crear Notification para el usuario Director.\n12. Probar con Thunder Client usando token."
+  },
+  {
+    "title": "T05 - Backend para subir evidencias",
+    "responsible": "Backend 2",
+    "description": "Esta tarea permite cargar archivos de respaldo para solicitudes. Las evidencias pueden ser PDF o imagenes. El backend debe recibir el archivo, validar tipo y tamano, guardarlo localmente en backend/uploads/evidences y guardar la URL publica local dentro de la solicitud. No se usara servicio externo para esta demo.",
+    "checklist": [
+      "Configurar Multer.",
+      "Configurar carpeta local `uploads/evidences`.",
+      "Crear `uploadService`.",
+      "Aceptar PDF, JPG y PNG.",
+      "Validar tamano maximo.",
+      "Guardar URL local.",
+      "Guardar ruta local.",
+      "Guardar nombre original.",
+      "Manejar errores."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Crear backend/src/services/uploadService.js.\n2. Crear automaticamente la carpeta uploads/evidences si no existe.\n3. Configurar multer en la ruta de solicitudes.\n4. Permitir solo:\n   application/pdf, image/jpeg, image/png.\n5. Definir limite de tamano, por ejemplo 5MB.\n6. Guardar archivo localmente con nombre unico, por ejemplo fecha + nombre original.\n7. Guardar en la solicitud:\n   evidence.url, evidence.localPath, evidence.originalName.\n8. Probar desde Postman con form-data.\n9. Exponer /uploads con express.static para ver el archivo desde el navegador.\n10. No subir la carpeta uploads/ al repo."
+  },
+  {
+    "title": "T06 - Frontend formulario de solicitud estudiantil",
+    "responsible": "Frontend 1",
+    "description": "Esta tarea crea la pantalla para que el estudiante registre una solicitud de ausencia. El formulario debe permitir seleccionar materias inscritas, fechas, motivo, detalle y evidencia. Debe mostrar validaciones antes de enviar y consumir el endpoint real del backend.",
+    "checklist": [
+      "Crear `StudentRequestForm.jsx`.",
+      "Cargar materias inscritas.",
+      "Permitir seleccionar fechas.",
+      "Permitir seleccionar motivo.",
+      "Mostrar si motivo requiere evidencia.",
+      "Adjuntar archivo.",
+      "Validar campos obligatorios.",
+      "Enviar al backend.",
+      "Mostrar confirmacion.",
+      "Redirigir al historial."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Trabajar en frontend/src/features/requests.\n2. Crear StudentRequestForm.jsx.\n3. Revisar el formulario del mockup en preview/index.html.\n4. Cargar materias desde la API o desde datos temporales si la API aun no esta lista.\n5. Crear inputs: fechas, motivo, materias, detalle y archivo.\n6. Si el motivo requiere evidencia, no permitir enviar sin archivo.\n7. Si hay archivo, usar FormData.\n8. Enviar a POST /api/requests.\n9. Mostrar mensaje \"Solicitud enviada\".\n10. Redirigir a historial."
+  },
+  {
+    "title": "T07 - Frontend formulario de solicitud docente",
+    "responsible": "Frontend 2",
+    "description": "Esta tarea crea el formulario para docentes. A diferencia del estudiante, una ausencia docente puede afectar varias materias y varias fechas. Si se aprueba, impacta a la asistencia de todos los estudiantes inscritos. En esta tarea solo se crea y envia la solicitud; el impacto lo resuelve backend.",
+    "checklist": [
+      "Crear `TeacherRequestForm.jsx`.",
+      "Cargar materias asignadas.",
+      "Permitir seleccionar varias materias.",
+      "Permitir varias fechas.",
+      "Permitir fechas no consecutivas.",
+      "Seleccionar motivo.",
+      "Adjuntar evidencia.",
+      "Enviar solicitud.",
+      "Mostrar confirmacion."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Trabajar en frontend/src/features/requests.\n2. Crear TeacherRequestForm.jsx.\n3. Mostrar materias asignadas al docente autenticado.\n4. Permitir seleccionar una o varias materias con checkbox.\n5. Permitir agregar varias fechas.\n6. Usar el mismo endpoint POST /api/requests.\n7. Enviar requesterRole docente o dejar que backend lo detecte por req.user.role.\n8. Mostrar resumen antes de enviar.\n9. Al enviar, mostrar confirmacion y volver al dashboard docente."
+  },
+  {
+    "title": "T08 - Historial de solicitudes",
+    "responsible": "Frontend 1",
+    "description": "Esta tarea muestra al estudiante o docente todas sus solicitudes. El usuario debe poder ver estado, fechas, materias, comentario del revisor, evidencia y acciones disponibles. Las acciones dependen del estado: observada permite corregir, rechazada permite apelar, aprobada solo consultar.",
+    "checklist": [
+      "Crear `RequestHistoryPage.jsx`.",
+      "Consumir `GET /api/requests/my`.",
+      "Mostrar tabla o lista.",
+      "Mostrar estado con color.",
+      "Mostrar comentario del revisor.",
+      "Mostrar evidencia.",
+      "Boton ver detalle.",
+      "Boton corregir si esta observada.",
+      "Boton apelar si esta rechazada."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Crear RequestHistoryPage.jsx.\n2. Consumir GET /api/requests/my con token.\n3. Renderizar codigo, estado, fechas, materias y motivo.\n4. Crear chips de estado:\n   pendiente, observada, aprobada, rechazada.\n5. Si status es observada, mostrar boton \"Corregir\".\n6. Si status es rechazada, mostrar boton \"Apelar\".\n7. Si status es aprobada, mostrar solo \"Ver\".\n8. Probar con solicitudes del seed."
+  },
+  {
+    "title": "T09 - Bandeja de revision del Director",
+    "responsible": "Frontend 2",
+    "description": "Esta tarea crea la pantalla principal del Director de Carrera. Debe mostrar las solicitudes que requieren revision y permitir abrir dos tipos de modal: Ver y Revisar. Ver solo muestra informacion. Revisar muestra detalle completo y acciones aprobar, observar o rechazar.",
+    "checklist": [
+      "Crear `DirectorReviewQueue.jsx`.",
+      "Consumir `GET /api/requests`.",
+      "Mostrar pendientes.",
+      "Mostrar observadas.",
+      "Mostrar rechazadas/apeladas.",
+      "Crear filtros.",
+      "Boton Ver.",
+      "Boton Revisar.",
+      "Mostrar evidencia.",
+      "Proteger por rol director."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Trabajar en frontend/src/features/requests.\n2. Crear DirectorReviewQueue.jsx.\n3. Consumir GET /api/requests con token de director.\n4. Crear filtros por estado.\n5. En la tabla mostrar solicitante, tipo, fechas, materias y estado.\n6. Boton Ver abre modal sin acciones.\n7. Boton Revisar abre modal con acciones.\n8. No mostrar esta pantalla a otros roles.\n9. Revisar el mockup del director en preview."
+  },
+  {
+    "title": "T10 - Backend revision de solicitudes",
+    "responsible": "Backend 1",
+    "description": "Esta tarea permite que el Director apruebe, observe o rechace una solicitud. Toda decision debe tener comentario obligatorio. Si aprueba, debe llamar al servicio de impacto de asistencia. Si observa, el solicitante podra corregir. Si rechaza, el solicitante podra apelar.",
+    "checklist": [
+      "Crear `PATCH /api/requests/:id/review`.",
+      "Permitir solo rol director.",
+      "Validar accion.",
+      "Validar comentario obligatorio.",
+      "Guardar revisor.",
+      "Guardar fecha de revision.",
+      "Cambiar estado.",
+      "Crear auditoria.",
+      "Crear notificacion.",
+      "Llamar impacto si se aprueba."
+    ],
+    "comment": "Tutorial paso a paso:\n1. En requestRoutes crear PATCH /:id/review.\n2. Proteger con authMiddleware y requireRole(\"director\").\n3. Recibir body:\n   action y comment.\n4. action puede ser aprobar, observar o rechazar.\n5. Si comment esta vacio, responder 400.\n6. Buscar la solicitud por id.\n7. Cambiar status segun action.\n8. Guardar reviewerId y reviewedAt.\n9. Crear AuditLog.\n10. Crear Notification al solicitante.\n11. Si action es aprobar, llamar al servicio de impacto de asistencia.\n12. Probar cada accion con Postman."
+  },
+  {
+    "title": "T11 - Correccion de solicitudes observadas",
+    "responsible": "Frontend 1",
+    "description": "Esta tarea permite que el solicitante corrija una solicitud observada. La pantalla debe mostrar el comentario del Director para que el usuario entienda que debe arreglar. Se debe permitir modificar detalle y evidencia, pero no cambiar datos criticos sin validacion.",
+    "checklist": [
+      "Crear modal o pantalla de correccion.",
+      "Mostrar comentario del revisor.",
+      "Permitir editar detalle.",
+      "Permitir reemplazar evidencia.",
+      "Validar archivo.",
+      "Enviar correccion.",
+      "Cambiar estado a pendiente.",
+      "Mostrar confirmacion."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Crear EditObservedRequest.jsx.\n2. Abrirlo desde historial cuando status sea observada.\n3. Mostrar arriba el comentario del Director.\n4. Permitir editar detalle.\n5. Permitir subir nueva evidencia.\n6. Enviar PATCH o PUT al endpoint de correccion.\n7. Al guardar, backend debe volver la solicitud a pendiente.\n8. Mostrar mensaje \"Solicitud corregida y enviada nuevamente\".\n9. Volver al historial."
+  },
+  {
+    "title": "T12 - Apelacion de solicitudes rechazadas",
+    "responsible": "Frontend 2",
+    "description": "Esta tarea permite que un usuario apele una solicitud rechazada. La apelacion debe incluir un argumento obligatorio y evidencia adicional opcional. Al enviarse, Direccion debe recibir notificacion y la solicitud debe volver a revision.",
+    "checklist": [
+      "Crear `AppealForm.jsx`.",
+      "Mostrar solo en solicitudes rechazadas.",
+      "Pedir argumento obligatorio.",
+      "Permitir evidencia opcional.",
+      "Enviar apelacion.",
+      "Mostrar confirmacion.",
+      "Actualizar estado visual.",
+      "Notificar a Direccion."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Crear AppealForm.jsx.\n2. En historial mostrar boton Apelar solo si status es rechazada.\n3. El formulario debe pedir comentario obligatorio.\n4. Adjuntar evidencia opcional si el usuario tiene.\n5. Enviar al endpoint de apelaciones.\n6. Mostrar mensaje \"Apelacion enviada\".\n7. La solicitud debe quedar como pendiente por apelacion.\n8. Probar con una solicitud rechazada del seed."
+  },
+  {
+    "title": "T13 - Backend asistencia por materia y fecha",
+    "responsible": "Backend 2",
+    "description": "Esta tarea crea la API de asistencia. El docente debe poder consultar una materia y fecha, ver estudiantes inscritos y marcar `P` o `F`. Si un registro esta en `L`, el docente no puede cambiarlo. Solo Direccion podria modificar una licencia con justificacion y auditoria.",
+    "checklist": [
+      "Crear `attendanceController`.",
+      "Crear `attendanceRoutes`.",
+      "Crear `GET /api/attendance`.",
+      "Crear `PATCH /api/attendance/:id`.",
+      "Filtrar por curso y fecha.",
+      "Validar docente asignado.",
+      "Bloquear `L` para docentes.",
+      "Permitir cambio director con justificacion.",
+      "Registrar auditoria."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Crear attendanceController.js y attendanceRoutes.js.\n2. GET debe recibir courseId y date.\n3. Buscar estudiantes inscritos con Enrollment.\n4. Devolver estado de asistencia de cada estudiante.\n5. PATCH debe recibir state P o F.\n6. Si el registro esta en L y user.role es docente, responder 403.\n7. Si user.role es director, permitir cambio solo con comment.\n8. Registrar AuditLog por cada cambio.\n9. Probar con un registro P, uno F y uno L."
+  },
+  {
+    "title": "T14 - Frontend registro de asistencia docente",
+    "responsible": "Frontend 1",
+    "description": "Esta tarea crea la pantalla donde el docente pasa asistencia. Debe seleccionar materia, paralelo y fecha. Luego se carga la lista de estudiantes inscritos y se marca P o F. Las licencias L aparecen bloqueadas, con estilo visual diferente.",
+    "checklist": [
+      "Crear `AttendancePage.jsx`.",
+      "Cargar materias del docente.",
+      "Seleccionar fecha.",
+      "Cargar estudiantes.",
+      "Mostrar botones P, F y L.",
+      "Deshabilitar L bloqueada.",
+      "Guardar cambios.",
+      "Mostrar estado de guardado.",
+      "Mostrar errores."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Trabajar en frontend/src/features/attendance.\n2. Crear AttendancePage.jsx.\n3. Consumir materias asignadas al docente.\n4. Al seleccionar materia y fecha, consumir GET /api/attendance.\n5. Renderizar una fila por estudiante.\n6. Mostrar botones P, F y L.\n7. Si locked es true, deshabilitar botones y mostrar \"Bloqueado por Direccion\".\n8. Al cambiar P o F, llamar PATCH /api/attendance/:id.\n9. Mostrar toast o mensaje de guardado."
+  },
+  {
+    "title": "T15 - Servicio de impacto por aprobacion estudiantil",
+    "responsible": "Backend 1",
+    "description": "Esta tarea implementa la regla mas importante para estudiantes: cuando Direccion aprueba una solicitud, la asistencia debe quedar como `L`. Si ya existia una falta `F`, cambia a `L`. Si la asistencia es futura y aun no existe, se crea como `L` agendada. El docente no puede editar ese registro.",
+    "checklist": [
+      "Crear `attendanceImpactService.js`.",
+      "Detectar solicitud estudiantil.",
+      "Buscar asistencia existente.",
+      "Cambiar `F` a `L`.",
+      "Crear `L` futura si no existe.",
+      "Marcar `locked: true`.",
+      "Registrar auditoria.",
+      "Crear notificacion."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Crear backend/src/services/attendanceImpactService.js.\n2. Crear funcion applyStudentApprovalImpact(request, session).\n3. Recibir solicitud aprobada.\n4. Recorrer fechas y materias de la solicitud.\n5. Buscar Attendance por studentId, courseId y date.\n6. Si existe, actualizar state = \"L\" y locked = true.\n7. Si no existe, crear nuevo Attendance con state = \"L\" y locked = true.\n8. Guardar sourceRequestId para saber de donde viene.\n9. Crear AuditLog indicando F -> L o L futura.\n10. Llamar esta funcion desde reviewController cuando se aprueba."
+  },
+  {
+    "title": "T16 - Servicio de impacto por ausencia docente",
+    "responsible": "Backend 2",
+    "description": "Esta tarea implementa la regla de ausencia docente. Cuando una ausencia docente se aprueba, las clases afectadas quedan autorizadas. Para efectos de asistencia, los estudiantes inscritos deben quedar como `P` automaticamente, salvo que ya tengan una `L` aprobada.",
+    "checklist": [
+      "Detectar solicitud docente.",
+      "Buscar cursos afectados.",
+      "Buscar estudiantes inscritos.",
+      "Recorrer fechas afectadas.",
+      "Crear asistencia `P`.",
+      "No sobrescribir `L`.",
+      "Registrar auditoria.",
+      "Notificar estudiantes."
+    ],
+    "comment": "Tutorial paso a paso:\n1. En attendanceImpactService crear applyTeacherApprovalImpact(request, session).\n2. Verificar que request.requesterRole sea docente.\n3. Obtener courseIds y dates de la solicitud.\n4. Buscar enrollments de cada curso.\n5. Por cada estudiante y fecha, buscar Attendance.\n6. Si no existe, crear state P.\n7. Si existe F o P, dejar P segun regla del proyecto.\n8. Si existe L, no sobrescribirla.\n9. Crear AuditLog por impacto docente.\n10. Crear notificaciones para estudiantes afectados."
+  },
+  {
+    "title": "T17 - Transaccion de aprobacion",
+    "responsible": "Backend 1",
+    "description": "Esta tarea asegura que una aprobacion no quede a medias. Cuando se aprueba una solicitud se actualizan varias cosas: solicitud, asistencia, auditoria y notificaciones. Si una parte falla, todo debe revertirse. MongoDB Atlas permite usar transacciones con Mongoose sessions.",
+    "checklist": [
+      "Usar `mongoose.startSession`.",
+      "Usar `session.withTransaction`.",
+      "Actualizar solicitud dentro de session.",
+      "Actualizar asistencia dentro de session.",
+      "Crear auditoria dentro de session.",
+      "Crear notificacion dentro de session.",
+      "Hacer commit automatico.",
+      "Revertir si falla.",
+      "Probar error simulado."
+    ],
+    "comment": "Tutorial paso a paso:\n1. En reviewController importar mongoose.\n2. Crear session:\n   const session = await mongoose.startSession();\n3. Ejecutar:\n   await session.withTransaction(async () => { ... });\n4. Dentro de la transaccion actualizar AbsenceRequest.\n5. Llamar a attendanceImpactService pasando session.\n6. Crear AuditLog con session.\n7. Crear Notification con session.\n8. Si algo falla, lanzar error.\n9. Mongoose revierte la transaccion automaticamente.\n10. Al final cerrar session con session.endSession().\n11. Probar provocando un error antes de terminar."
+  },
+  {
+    "title": "T18 - Backend notificaciones",
+    "responsible": "Backend 2",
+    "description": "Esta tarea crea el modulo de notificaciones. Las notificaciones informan al usuario cuando una solicitud fue creada, observada, aprobada, rechazada o apelada. Cada usuario solo debe ver sus propias notificaciones.",
+    "checklist": [
+      "Crear `notificationController`.",
+      "Crear `notificationRoutes`.",
+      "Crear helper `createNotification`.",
+      "Crear `GET /api/notifications`.",
+      "Crear `PATCH /api/notifications/:id/read`.",
+      "Filtrar por usuario autenticado.",
+      "Crear notificaciones desde solicitudes.",
+      "Crear notificaciones desde revision.",
+      "Crear notificaciones desde apelacion."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Crear notificationController.js.\n2. Crear notificationRoutes.js.\n3. Crear service o helper createNotification(userId, title, message, relatedRequestId).\n4. GET /api/notifications debe usar req.user._id.\n5. PATCH /:id/read debe marcar read = true.\n6. No permitir leer notificaciones de otro usuario.\n7. Llamar createNotification desde requestController y reviewController.\n8. Probar con estudiante, docente y director."
+  },
+  {
+    "title": "T19 - Frontend notificaciones",
+    "responsible": "Frontend 2",
+    "description": "Esta tarea crea la pantalla donde cada usuario ve sus notificaciones. Debe mostrar no leidas, leidas, fecha y mensaje. Tambien debe existir un contador en la barra superior para que el usuario note que tiene solicitudes con respuesta o acciones pendientes.",
+    "checklist": [
+      "Crear `NotificationsPage.jsx`.",
+      "Consumir `GET /api/notifications`.",
+      "Mostrar no leidas.",
+      "Mostrar leidas.",
+      "Marcar como leida.",
+      "Mostrar contador.",
+      "Mostrar fecha.",
+      "Mostrar mensaje claro."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Trabajar en frontend/src/features/notifications.\n2. Crear NotificationsPage.jsx.\n3. Consumir GET /api/notifications con token.\n4. Separar visualmente leidas y no leidas.\n5. Mostrar contador en topbar.\n6. Al hacer click en una notificacion, llamar PATCH /api/notifications/:id/read.\n7. Actualizar la lista sin recargar toda la pagina.\n8. Probar con acciones de crear, aprobar, observar y rechazar."
+  },
+  {
+    "title": "T20 - Administracion de catalogos",
+    "responsible": "Backend / Frontend",
+    "description": "Esta tarea crea mantenimiento basico para datos que el sistema necesita: usuarios, carreras, cursos, paralelos y motivos. No debe ser una administracion exagerada; basta con CRUD simple para demo y para demostrar que el sistema es configurable.",
+    "checklist": [
+      "CRUD usuarios.",
+      "CRUD carreras.",
+      "CRUD cursos.",
+      "CRUD motivos.",
+      "Asignar docente a curso.",
+      "Asignar director a carrera.",
+      "Definir evidencia obligatoria por motivo.",
+      "Proteger por rol administrador.",
+      "Crear pantallas simples."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Backend crea rutas /api/admin/users, /api/admin/careers, /api/admin/courses, /api/admin/motives.\n2. Proteger con requireRole(\"administrador\").\n3. Frontend crea pantallas de tabla + formulario.\n4. No usar modales complejos si no hace falta.\n5. Validar campos obligatorios.\n6. Probar crear un motivo nuevo.\n7. Confirmar que el motivo aparezca en formularios de solicitud.\n8. Probar crear un curso y asignarle docente."
+  },
+  {
+    "title": "T21 - Auditoria automatica y vista de auditoria",
+    "responsible": "Backend / Frontend",
+    "description": "Esta tarea registra acciones importantes del sistema y permite consultarlas. La auditoria es clave para defender el proyecto porque muestra fecha, usuario, rol, accion, estado anterior, estado nuevo y comentario. La auditoria no debe poder editarse desde frontend.",
+    "checklist": [
+      "Crear helper `createAuditLog`.",
+      "Registrar creacion de solicitud.",
+      "Registrar revision.",
+      "Registrar apelacion.",
+      "Registrar cambio de asistencia.",
+      "Guardar antes y despues.",
+      "Crear endpoint de consulta.",
+      "Crear vista de auditoria.",
+      "Filtrar por usuario, accion y fecha."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Backend crea auditLogService.js con createAuditLog.\n2. Llamar createAuditLog desde controladores importantes.\n3. Guardar:\n   userId, role, action, entity, entityId, before, after, comment.\n4. Crear GET /api/audit-logs.\n5. Proteger para director, secretario y administrador.\n6. Frontend crea AuditLogPage.jsx.\n7. Mostrar tabla con filtros simples.\n8. No crear botones de editar ni eliminar auditoria."
+  },
+  {
+    "title": "T22 - Reportes",
+    "responsible": "Frontend / Backend",
+    "description": "Esta tarea crea reportes para la exposicion y control academico. Los reportes deben mostrar datos utiles: solicitudes por estado, carrera, materia, docente, estudiante y motivos mas usados. No se necesita una herramienta compleja; basta con tarjetas, tablas y barras simples.",
+    "checklist": [
+      "Reporte por estado.",
+      "Reporte por carrera.",
+      "Reporte por materia.",
+      "Reporte por docente.",
+      "Reporte por estudiante.",
+      "Reporte por motivo.",
+      "Filtro por fechas.",
+      "Vista dashboard.",
+      "Exportacion simulada o simple."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Backend crea endpoints /api/reports/summary y similares.\n2. Usar MongoDB aggregate para contar por status, career, course y motive.\n3. Frontend crea ReportsPage.jsx.\n4. Mostrar tarjetas numericas.\n5. Mostrar barras simples con CSS.\n6. Agregar filtros por fecha, carrera y materia.\n7. Usar datos del seed para probar.\n8. La demo debe poder explicar que materias o motivos tienen mas solicitudes."
+  },
+  {
+    "title": "T23 - Pruebas de API",
+    "responsible": "QA / Backend",
+    "description": "Esta tarea prueba todos los endpoints importantes antes de integrarlos completamente al frontend. Se debe crear una coleccion en Thunder Client o Postman para que cualquiera pueda repetir las pruebas con el mismo token y datos.",
+    "checklist": [
+      "Probar `/api/health`.",
+      "Probar login.",
+      "Probar `/api/auth/me`.",
+      "Probar crear solicitud.",
+      "Probar subir evidencia.",
+      "Probar revisar solicitud.",
+      "Probar asistencia.",
+      "Probar notificaciones.",
+      "Probar auditoria.",
+      "Exportar coleccion."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Abrir Thunder Client o Postman.\n2. Crear variable base_url = http://localhost:5000/api.\n3. Crear request de login.\n4. Copiar token generado.\n5. En requests protegidos agregar header:\n   Authorization: Bearer TOKEN\n6. Probar cada endpoint con datos correctos.\n7. Probar tambien errores: sin token, rol incorrecto, datos incompletos.\n8. Exportar la coleccion y guardarla en docs/api si el equipo lo decide."
+  },
+  {
+    "title": "T24 - Pruebas de reglas de negocio",
+    "responsible": "QA",
+    "description": "Esta tarea valida las reglas que hacen serio el proyecto. No basta con que la pantalla se vea bien; debe cumplirse la logica academica: fechas, evidencias, estados, bloqueo de licencias e impacto automatico en asistencia.",
+    "checklist": [
+      "Probar permiso para fecha futura.",
+      "Probar justificacion para fecha pasada.",
+      "Probar evidencia obligatoria.",
+      "Probar solicitud observada.",
+      "Probar correccion de observada.",
+      "Probar rechazo.",
+      "Probar apelacion.",
+      "Probar `F -> L`.",
+      "Probar licencia futura.",
+      "Probar bloqueo de `L`.",
+      "Probar ausencia docente aprobada."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Usar usuarios creados por el seed.\n2. Crear una solicitud futura y verificar que sea permiso anticipado.\n3. Crear una solicitud pasada y verificar que sea justificacion posterior.\n4. Elegir motivo con evidencia obligatoria y probar enviar sin archivo.\n5. Observar una solicitud y verificar que el usuario pueda corregir.\n6. Rechazar una solicitud y verificar que pueda apelar.\n7. Aprobar solicitud estudiantil con falta F y verificar que cambie a L.\n8. Intentar cambiar L como docente y verificar que no deje.\n9. Aprobar ausencia docente y verificar asistencia P para estudiantes.\n10. Anotar fallas como tarjetas nuevas."
+  },
+  {
+    "title": "T25 - Integracion final frontend/backend",
+    "responsible": "Frontend / Backend",
+    "description": "Esta tarea une todo: pantallas reales con endpoints reales. Se debe probar el flujo completo desde login hasta auditoria. El objetivo es detectar errores de comunicacion entre frontend y backend, permisos mal aplicados o datos que no coinciden.",
+    "checklist": [
+      "Login conectado.",
+      "Rutas protegidas.",
+      "Solicitudes conectadas.",
+      "Revision conectada.",
+      "Asistencia conectada.",
+      "Notificaciones conectadas.",
+      "Auditoria conectada.",
+      "Reportes conectados.",
+      "Probar cada rol."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Abrir terminal 1:\n   cd backend\n   npm run dev\n2. Abrir terminal 2:\n   cd frontend\n   npm run dev\n3. Confirmar backend en http://localhost:5000/api/health.\n4. Confirmar frontend en http://localhost:5173.\n5. Entrar como estudiante y crear solicitud.\n6. Entrar como director y revisarla.\n7. Aprobar y verificar asistencia.\n8. Entrar como docente y revisar que L este bloqueada.\n9. Revisar notificaciones.\n10. Revisar auditoria.\n11. Registrar bugs encontrados."
+  },
+  {
+    "title": "T26 - README final, demo y exposicion",
+    "responsible": "QA / Documentacion / Equipo",
+    "description": "Esta tarea prepara la entrega final. El README debe explicar como instalar y ejecutar el proyecto sin ayuda externa. La demo debe tener un guion claro para mostrar problema, solucion, roles, flujo de solicitud, aprobacion, impacto en asistencia y auditoria.",
+    "checklist": [
+      "README final.",
+      "Usuarios de prueba.",
+      "Comandos backend.",
+      "Comandos frontend.",
+      "Explicacion de `.env`.",
+      "Explicacion de MongoDB.",
+      "Guion de demo.",
+      "Capturas.",
+      "Ensayo de exposicion.",
+      "Revision final del repo."
+    ],
+    "comment": "Tutorial paso a paso:\n1. Actualizar README.md con comandos reales.\n2. Verificar que backend y frontend corran siguiendo solo el README.\n3. Agregar usuarios de prueba con rol y password.\n4. Crear guion de demo:\n   login estudiante, crear solicitud, revisar director, aprobar, ver L, ver auditoria.\n5. Tomar capturas de pantallas clave.\n6. Revisar que no se suba node_modules ni dist.\n7. Cada integrante debe preparar una explicacion de su modulo.\n8. Ensayar la demo completa antes de presentar."
+  }
+]
