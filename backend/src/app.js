@@ -4,6 +4,8 @@ import helmet from "helmet";
 import path from "path";
 import { env } from "./config/env.js";
 import healthRoutes from "./routes/healthRoutes.js";
+import attendanceRoutes from "./routes/attendanceRoutes.js";
+import requestRoutes from "./routes/requestRoutes.js";
 
 export function createApp() {
   const app = express();
@@ -23,6 +25,8 @@ export function createApp() {
   });
 
   app.use("/api/health", healthRoutes);
+  app.use("/api/requests", requestRoutes);
+  app.use("/api/attendance", attendanceRoutes);
 
   app.use((req, res) => {
     res.status(404).json({ message: "Ruta no encontrada" });

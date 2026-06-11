@@ -28,7 +28,7 @@ const requestSchema = new mongoose.Schema(
     },
     reasonType: {
       type: String,
-      enum: ["salud", "laboral", "academico", "personal", "emergencia", "otro"],
+      enum: ["salud", "laboral", "academico", "personal", "emergencia", "fuerza_mayor", "otro"],
       required: true,
     },
     reasonDetail: { type: String, required: true, trim: true },
@@ -40,6 +40,11 @@ const requestSchema = new mongoose.Schema(
     dates: { type: [requestDateSchema], validate: (value) => value.length > 0 },
     courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
     evidenceRequired: { type: Boolean, default: false },
+    evidence: {
+      url: { type: String, trim: true },
+      localPath: { type: String, trim: true },
+      originalName: { type: String, trim: true },
+    },
     currentReviewer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     reviewer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     reviewedAt: { type: Date },
