@@ -15,6 +15,8 @@ import LoginPage from "./features/auth/LoginPage.jsx";
 import StudentRequestForm from "./features/requests/StudentRequestForm.jsx";
 import TeacherRequestForm from "./features/requests/TeacherRequestForm.jsx";
 import RequestHistoryPage from "./features/requests/RequestHistoryPage.jsx";
+import DirectorReviewQueue from "./features/requests/DirectorReviewQueue.jsx";
+
 
 const stats = [
   { label: "Solicitudes pendientes", value: "18", detail: "Requieren revision", icon: Clock3 },
