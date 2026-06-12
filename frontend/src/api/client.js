@@ -202,7 +202,12 @@ export const apiClient = {
       const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: usernameOrEmail, email: usernameOrEmail, password })
+        body: JSON.stringify({
+          identifier: usernameOrEmail,
+          username: usernameOrEmail,
+          email: usernameOrEmail,
+          password
+        })
       });
 
       if (response.ok) {

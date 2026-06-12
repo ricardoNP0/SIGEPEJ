@@ -218,12 +218,12 @@ export default function App() {
           <Route path="nueva-solicitud" element={<StudentRequestForm />} />
           <Route path="solicitud-docente" element={<TeacherRequestForm />} />
           <Route path="mis-solicitudes" element={<RequestHistoryPage />} />
-          <Route path="historial" element={<RequestHistoryPage />} />
+          <Route path="historial" element={<Navigate to="/mis-solicitudes" replace />} />
 
-          {/* Rutas de redirección por rol segun Sprint 1 */}
-          <Route path="bandeja" element={<PlaceholderPage details={pageDetails["/revision"]} />} />
-          <Route path="seguimiento" element={<PlaceholderPage details={pageDetails["/revision"]} />} />
-          <Route path="administraron" element={<PlaceholderPage details={pageDetails["/usuarios"]} />} />
+          {/* Alias conservados por compatibilidad con avances del sprint */}
+          <Route path="bandeja" element={<Navigate to="/revision" replace />} />
+          <Route path="seguimiento" element={<Navigate to="/revision" replace />} />
+          <Route path="administraron" element={<Navigate to="/usuarios" replace />} />
 
           {/* Resto de rutas placeholder */}
           {Object.entries(pageDetails).map(([path, details]) => (

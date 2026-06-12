@@ -141,7 +141,7 @@ export default function StudentRequestForm() {
 
       // Redirect immediately to history page after a brief delay
       setTimeout(() => {
-        navigate("/historial");
+        navigate("/mis-solicitudes");
       }, 1500);
     } catch (err) {
       setErrorMsg(err.message || "Error al enviar la solicitud.");
@@ -321,7 +321,7 @@ export default function StudentRequestForm() {
             <button 
               type="button" 
               className="btn-secondary"
-              onClick={() => navigate("/historial")}
+              onClick={() => navigate("/mis-solicitudes")}
               disabled={submitting}
             >
               Cancelar

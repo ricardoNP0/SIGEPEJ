@@ -29,15 +29,15 @@ export default function LoginPage() {
       // Role redirect logic matching Sprint 1 specifications
       const role = data.user.role;
       if (role === "estudiante") {
-        navigate("/historial");
+        navigate("/mis-solicitudes");
       } else if (role === "docente") {
         navigate("/asistencia");
       } else if (role === "director") {
-        navigate("/bandeja");
+        navigate("/revision");
       } else if (role === "secretario") {
-        navigate("/seguimiento");
+        navigate("/revision");
       } else if (role === "administrador") {
-        navigate("/administraron");
+        navigate("/usuarios");
       } else {
         navigate("/dashboard");
       }
