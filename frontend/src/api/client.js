@@ -182,6 +182,109 @@ function saveMockRequests(requests) {
   localStorage.setItem("sigepej_mock_requests", JSON.stringify(requests));
 }
 
+function normalizeStatus(status) {
+  const map = {
+    aprobada: "aprobado",
+    aprobado: "aprobado",
+    observada: "observado",
+    observado: "observado",
+    rechazada: "rechazado",
+    rechazado: "rechazado",
+    apelada: "apelado",
+    apelado: "apelado",
+    pendiente: "pendiente"
+  };
+  return map[String(status || "").toLowerCase()] || status;
+}
+
+function normalizeRequest(request) {
+  return {
+    ...request,
+    id: request.id || request._id,
+    code: request.code || `SOL-${String(request._id || request.id || "").slice(-6)}`,
+    requesterName:
+      request.requesterName ||
+      (request.requester
+        ? `${request.requester.firstName || ""} ${request.requester.lastName || ""}`.trim()
+        : ""),
+    requesterUsername: request.requesterUsername || request.requester?.username,
+    dates: (request.dates || []).map((item) => ({
+      ...item,
+      courseId: item.courseId || item.course?._id || item.course,
+      courseCode: item.courseCode || item.course?.code,
+      courseName: item.courseName || item.course?.subject?.name || item.course?.subjectName,
+      date: typeof item.date === "string" ? item.date.slice(0, 10) : item.date
+    })),
+    courses: (request.courses || []).map((course) =>
+      typeof course === "string"
+        ? course
+        : {
+            id: course.id || course._id,
+            code: course.code,
+            subjectName: course.subjectName || course.subject?.name,
+            parallel: course.parallel
+          }
+    ),
+    evidenceUrl: request.evidenceUrl || request.evidence?.url,
+    evidenceName: request.evidenceName || request.evidence?.originalName
+  };
+}
+
+function getMockAttendance(courseIdOrCode, date) {
+  const course =
+    MOCK_COURSES.find((item) => item.id === courseIdOrCode || item.code === courseIdOrCode) ||
+    MOCK_COURSES[0];
+  const key = `sigepej_mock_attendance_${course.code}_${date}`;
+  const stored = localStorage.getItem(key);
+
+  if (stored) {
+    return JSON.parse(stored);
+  }
+
+  const students = MOCK_USERS.filter((user) => user.role === "estudiante");
+  const attendance = {
+    id: key,
+    _id: key,
+    course,
+    date,
+    records: students.map((student, index) => ({
+      recordId: `${key}_${student.code}`,
+      student: {
+        id: student.code,
+        code: student.code,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        email: student.email
+      },
+      status: index === 1 && date === "2026-06-02" ? "F" : "P",
+      lockedByRequest: false,
+      note: ""
+    }))
+  };
+
+  localStorage.setItem(key, JSON.stringify(attendance));
+  return attendance;
+}
+
+function saveMockAttendanceRecord(recordId, status, note = "") {
+  const keys = Object.keys(localStorage).filter((key) => key.startsWith("sigepej_mock_attendance_"));
+
+  for (const key of keys) {
+    const attendance = JSON.parse(localStorage.getItem(key));
+    const record = attendance.records.find((item) => item.recordId === recordId);
+    if (!record) continue;
+    if (record.lockedByRequest) {
+      throw new Error("No se puede modificar una licencia bloqueada por Direccion.");
+    }
+    record.status = status;
+    record.note = note;
+    localStorage.setItem(key, JSON.stringify(attendance));
+    return { ok: true, record };
+  }
+
+  throw new Error("Registro de asistencia no encontrado en mock DB");
+}
+
 // Headers builder
 function getHeaders(isMultipart = false) {
   const token = localStorage.getItem("sigepej_token");
@@ -269,12 +372,34 @@ export const apiClient = {
       const response = await fetch(`${API_URL}/requests/my`, {
         headers: getHeaders()
       });
-      if (response.ok) return await response.json();
+      if (response.ok) {
+        const data = await response.json();
+        return Array.isArray(data) ? data.map(normalizeRequest) : [];
+      }
       throw new Error("API error fetching requests");
     } catch (error) {
       console.warn("Backend getMyRequests failed, using mock data:", error.message);
       const requests = getMockRequests();
-      return requests.filter((r) => r.requesterUsername === username);
+      return requests.filter((r) => r.requesterUsername === username).map(normalizeRequest);
+    }
+  },
+
+  async getAllRequests(status = "todos") {
+    try {
+      const query = status && status !== "todos" ? `?status=${encodeURIComponent(status)}` : "";
+      const response = await fetch(`${API_URL}/requests${query}`, {
+        headers: getHeaders()
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return (data.requests || []).map(normalizeRequest);
+      }
+      throw new Error("API error fetching all requests");
+    } catch (error) {
+      console.warn("Backend getAllRequests failed, using mock data:", error.message);
+      const requests = getMockRequests().map(normalizeRequest);
+      if (!status || status === "todos") return requests;
+      return requests.filter((request) => normalizeStatus(request.status) === normalizeStatus(status));
     }
   },
 
@@ -356,7 +481,10 @@ export const apiClient = {
         headers: getHeaders(true),
         body: formData
       });
-      if (response.ok) return await response.json();
+      if (response.ok) {
+        const data = await response.json();
+        return { ...data, request: normalizeRequest(data.request) };
+      }
       throw new Error("API error updating request");
     } catch (error) {
       console.warn("Backend updateRequest failed, updating mock data:", error.message);
@@ -387,7 +515,10 @@ export const apiClient = {
         headers: getHeaders(),
         body: JSON.stringify({ justification })
       });
-      if (response.ok) return await response.json();
+      if (response.ok) {
+        const data = await response.json();
+        return { ...data, request: normalizeRequest(data.request) };
+      }
       throw new Error("API error appealing request");
     } catch (error) {
       console.warn("Backend appealRequest failed, updating mock data:", error.message);
@@ -395,13 +526,97 @@ export const apiClient = {
       const requests = getMockRequests();
       const idx = requests.findIndex(r => r.id === id || r.code === id);
       if (idx !== -1) {
-        requests[idx].status = "pendiente";
-        requests[idx].reasonDetail = `${requests[idx].reasonDetail}\n[APELACION]: ${justification}`;
+        requests[idx].status = "apelado";
+        requests[idx].appealComment = justification;
         requests[idx].reviewComment = "";
         saveMockRequests(requests);
         return { ok: true, request: requests[idx] };
       }
       throw new Error("Solicitud no encontrada en mock DB");
+    }
+  },
+
+  async reviewRequest(id, status, reviewComment = "") {
+    try {
+      const response = await fetch(`${API_URL}/requests/${id}/review`, {
+        method: "PATCH",
+        headers: getHeaders(),
+        body: JSON.stringify({ status, reviewComment })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return { ...data, request: normalizeRequest(data.request) };
+      }
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.message || "API error reviewing request");
+    } catch (error) {
+      console.warn("Backend reviewRequest failed, updating mock data:", error.message);
+      const requests = getMockRequests();
+      const idx = requests.findIndex((request) => request.id === id || request._id === id || request.code === id);
+      if (idx === -1) throw new Error("Solicitud no encontrada en mock DB");
+
+      requests[idx].status = normalizeStatus(status);
+      requests[idx].reviewComment = reviewComment;
+      requests[idx].reviewedAt = new Date().toISOString();
+      saveMockRequests(requests);
+      return { ok: true, request: normalizeRequest(requests[idx]) };
+    }
+  },
+
+  async getAttendance(courseIdOrCode, date) {
+    try {
+      const response = await fetch(
+        `${API_URL}/attendance?courseId=${encodeURIComponent(courseIdOrCode)}&date=${encodeURIComponent(date)}`,
+        { headers: getHeaders() }
+      );
+      if (response.ok) {
+        const payload = await response.json();
+        const data = payload.data;
+        return {
+          id: `${data.course.id}-${date}`,
+          _id: `${data.course.id}-${date}`,
+          course: data.course,
+          date: data.date,
+          records: (data.attendance || []).map((record) => {
+            const [firstName = "Estudiante", ...lastNameParts] = String(record.studentName || "").split(" ");
+            return {
+              recordId: record.recordId,
+              student: {
+                id: record.studentId,
+                code: record.studentCode,
+                firstName,
+                lastName: lastNameParts.join(" "),
+                email: record.studentEmail
+              },
+              status: record.status,
+              lockedByRequest: record.isLocked,
+              note: record.note,
+              request: record.request
+            };
+          })
+        };
+      }
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.message || "API error fetching attendance");
+    } catch (error) {
+      console.warn("Backend getAttendance failed, using mock data:", error.message);
+      return getMockAttendance(courseIdOrCode, date);
+    }
+  },
+
+  async updateAttendance(recordId, status, note = "") {
+    try {
+      const response = await fetch(`${API_URL}/attendance/${recordId}`, {
+        method: "PATCH",
+        headers: getHeaders(),
+        body: JSON.stringify({ status, note })
+      });
+      if (response.ok) return await response.json();
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.message || "API error updating attendance");
+    } catch (error) {
+      console.warn("Backend updateAttendance failed, updating mock data:", error.message);
+      return saveMockAttendanceRecord(recordId, status, note);
     }
   }
 };

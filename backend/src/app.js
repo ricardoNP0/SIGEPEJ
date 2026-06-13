@@ -3,6 +3,8 @@ import express from "express";
 import helmet from "helmet";
 import path from "path";
 import { env } from "./config/env.js";
+import authRoutes from "./routes/authRoutes.js";
+import courseRoutes from "./routes/courseRoutes.js";
 import healthRoutes from "./routes/healthRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import requestRoutes from "./routes/requestRoutes.js";
@@ -25,6 +27,8 @@ export function createApp() {
   });
 
   app.use("/api/health", healthRoutes);
+  app.use("/api/auth", authRoutes);
+  app.use("/api/courses", courseRoutes);
   app.use("/api/requests", requestRoutes);
   app.use("/api/attendance", attendanceRoutes);
 

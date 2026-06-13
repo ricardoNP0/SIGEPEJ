@@ -12,6 +12,8 @@ import {
 import { AppLayout } from "./layouts/AppLayout.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import LoginPage from "./features/auth/LoginPage.jsx";
+import AttendancePage from "./features/attendance/AttendancePage.jsx";
+import RevisionPage from "./features/requests/RevisionPage.jsx";
 import StudentRequestForm from "./features/requests/StudentRequestForm.jsx";
 import TeacherRequestForm from "./features/requests/TeacherRequestForm.jsx";
 import RequestHistoryPage from "./features/requests/RequestHistoryPage.jsx";
@@ -30,18 +32,6 @@ const recentRequests = [
 ];
 
 const pageDetails = {
-  "/revision": {
-    title: "Bandeja de revision",
-    eyebrow: "Direccion",
-    description: "Cola de solicitudes pendientes, observadas y apeladas para aprobar, rechazar u observar con comentario obligatorio.",
-    actions: ["Aprobar", "Observar", "Rechazar"],
-  },
-  "/asistencia": {
-    title: "Control de asistencia",
-    eyebrow: "Docente",
-    description: "Lista de estudiantes inscritos por materia y paralelo. Permite registrar P/F; las licencias L solo se aplican por solicitud aprobada.",
-    actions: ["Elegir materia", "Registrar asistencia", "Ver licencias"],
-  },
   "/notificaciones": {
     title: "Notificaciones",
     eyebrow: "Seguimiento",
@@ -218,6 +208,8 @@ export default function App() {
           <Route path="nueva-solicitud" element={<StudentRequestForm />} />
           <Route path="solicitud-docente" element={<TeacherRequestForm />} />
           <Route path="mis-solicitudes" element={<RequestHistoryPage />} />
+          <Route path="revision" element={<RevisionPage />} />
+          <Route path="asistencia" element={<AttendancePage />} />
           <Route path="historial" element={<Navigate to="/mis-solicitudes" replace />} />
 
           {/* Alias conservados por compatibilidad con avances del sprint */}
