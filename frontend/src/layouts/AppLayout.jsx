@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { menuByRole } from "../routes/menuConfig.js";
 import { AuthContext } from "../context/AuthContext.jsx";
+import { apiClient } from "../api/client.js";
 
 const icons = {
   dashboard: Gauge,
@@ -37,12 +38,39 @@ const icons = {
 export function AppLayout() {
   const { user, loading, logout, activeRole } = useContext(AuthContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
 
   const menuItems = useMemo(() => {
     return menuByRole[activeRole || "estudiante"] || [];
   }, [activeRole]);
+
+  // Load unread notifications count
+  useEffect(() => {
+    if (!user) return;
+    
+    async function loadUnreadCount() {
+      try {
+        const data = await apiClient.getNotifications();
+        const count = data.filter((n) => !n.read).length;
+        setUnreadCount(count);
+      } catch (err) {
+        console.error("Error loading unread count:", err);
+      }
+    }
+
+    loadUnreadCount();
+    
+    window.addEventListener("notifications-updated", loadUnreadCount);
+
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(loadUnreadCount, 30000);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("notifications-updated", loadUnreadCount);
+    };
+  }, [user]);
 
   const currentUser = useMemo(() => {
     if (!user) return { initials: "US", name: "Usuario", role: "Cargando..." };
@@ -163,9 +191,35 @@ export function AppLayout() {
               <Search size={18} aria-hidden="true" />
               <input type="search" placeholder="Buscar solicitud, materia o usuario" />
             </label>
-            <button className="icon-button" type="button" aria-label="Ver notificaciones">
+            <button
+              className="icon-button"
+              type="button"
+              aria-label="Ver notificaciones"
+              onClick={() => navigate("/notificaciones")}
+              style={{ position: "relative" }}
+            >
               <Bell size={20} aria-hidden="true" />
-              <span className="notification-dot" aria-hidden="true" />
+              {unreadCount > 0 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "2px",
+                    right: "2px",
+                    backgroundColor: "var(--uv-gold-500)",
+                    color: "white",
+                    fontSize: "10px",
+                    fontWeight: "700",
+                    width: "18px",
+                    height: "18px",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </button>
           </div>
         </header>
