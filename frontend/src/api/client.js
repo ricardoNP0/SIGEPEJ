@@ -1,4 +1,5 @@
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_ORIGIN = API_URL.replace(/\/api\/?$/, "");
 
 // Seed Users from seed.js
 const MOCK_USERS = [
@@ -197,6 +198,14 @@ function normalizeStatus(status) {
   return map[String(status || "").toLowerCase()] || status;
 }
 
+function resolveEvidenceUrl(url) {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("blob:")) {
+    return url;
+  }
+  return `${API_ORIGIN}${url.startsWith("/") ? url : `/${url}`}`;
+}
+
 function normalizeRequest(request) {
   return {
     ...request,
@@ -225,7 +234,7 @@ function normalizeRequest(request) {
             parallel: course.parallel
           }
     ),
-    evidenceUrl: request.evidenceUrl || request.evidence?.url,
+    evidenceUrl: resolveEvidenceUrl(request.evidenceUrl || request.evidence?.url),
     evidenceName: request.evidenceName || request.evidence?.originalName
   };
 }
