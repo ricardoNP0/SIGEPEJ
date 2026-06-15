@@ -1,6 +1,14 @@
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const API_ORIGIN = API_URL.replace(/\/api\/?$/, "");
 
+async function buildApiError(response, fallbackMessage) {
+  const data = await response.json().catch(() => ({}));
+  const error = new Error(data.message || fallbackMessage);
+  error.isApiResponse = true;
+  error.status = response.status;
+  return error;
+}
+
 // Seed Users from seed.js
 const MOCK_USERS = [
   {
@@ -311,7 +319,6 @@ function saveMockRequests(requests) {
   localStorage.setItem("sigepej_mock_requests", JSON.stringify(requests));
 }
 
-<<<<<<< HEAD
 function getMockNotifications() {
   return JSON.parse(localStorage.getItem("sigepej_mock_notifications"));
 }
@@ -379,7 +386,8 @@ function addMockAuditLog(action, entityType, entityId, metadata) {
     createdAt: new Date().toISOString()
   });
   saveMockAudit(audit);
-=======
+}
+
 function normalizeStatus(status) {
   const map = {
     aprobada: "aprobado",
@@ -414,6 +422,10 @@ function normalizeRequest(request) {
         ? `${request.requester.firstName || ""} ${request.requester.lastName || ""}`.trim()
         : ""),
     requesterUsername: request.requesterUsername || request.requester?.username,
+    requesterEmail: request.requesterEmail || request.requester?.email,
+    requesterCode: request.requesterCode || request.requester?.code,
+    requesterId: request.requesterId || request.requester?._id || request.requester?.id,
+    requesterRole: request.requesterRole || request.requester?.role,
     dates: (request.dates || []).map((item) => ({
       ...item,
       courseId: item.courseId || item.course?._id || item.course,
@@ -489,7 +501,6 @@ function saveMockAttendanceRecord(recordId, status, note = "") {
   }
 
   throw new Error("Registro de asistencia no encontrado en mock DB");
->>>>>>> main
 }
 
 // Headers builder
@@ -524,9 +535,9 @@ export const apiClient = {
         return await response.json();
       }
 
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.message || "Error al iniciar sesion");
+      throw await buildApiError(response, "Error al iniciar sesion");
     } catch (error) {
+      if (error.isApiResponse) throw error;
       console.warn("Backend login failed or unavailable, falling back to mock database:", error.message);
 
       // Fallback Mock Authentication
@@ -574,20 +585,37 @@ export const apiClient = {
   },
 
   // Get Requests List
-  async getMyRequests(username) {
+  async getMyRequests(userOrUsername) {
+    const currentUser =
+      typeof userOrUsername === "object"
+        ? userOrUsername
+        : { username: userOrUsername };
+    const belongsToCurrentUser = (request) => {
+      const normalized = normalizeRequest(request);
+      return [
+        normalized.requesterUsername && currentUser.username && normalized.requesterUsername === currentUser.username,
+        normalized.requesterEmail && currentUser.email && normalized.requesterEmail === currentUser.email,
+        normalized.requesterCode && currentUser.code && normalized.requesterCode === currentUser.code,
+        normalized.requesterId && currentUser.id && String(normalized.requesterId) === String(currentUser.id),
+      ].some(Boolean);
+    };
+
     try {
       const response = await fetch(`${API_URL}/requests/my`, {
         headers: getHeaders()
       });
       if (response.ok) {
         const data = await response.json();
-        return Array.isArray(data) ? data.map(normalizeRequest) : [];
+        return Array.isArray(data)
+          ? data.map(normalizeRequest).filter(belongsToCurrentUser)
+          : [];
       }
-      throw new Error("API error fetching requests");
+      throw await buildApiError(response, "Error al obtener solicitudes");
     } catch (error) {
+      if (error.isApiResponse) throw error;
       console.warn("Backend getMyRequests failed, using mock data:", error.message);
       const requests = getMockRequests();
-      return requests.filter((r) => r.requesterUsername === username).map(normalizeRequest);
+      return requests.filter(belongsToCurrentUser).map(normalizeRequest);
     }
   },
 
@@ -601,8 +629,9 @@ export const apiClient = {
         const data = await response.json();
         return (data.requests || []).map(normalizeRequest);
       }
-      throw new Error("API error fetching all requests");
+      throw await buildApiError(response, "Error al listar solicitudes");
     } catch (error) {
+      if (error.isApiResponse) throw error;
       console.warn("Backend getAllRequests failed, using mock data:", error.message);
       const requests = getMockRequests().map(normalizeRequest);
       if (!status || status === "todos") return requests;
@@ -619,8 +648,9 @@ export const apiClient = {
         body: formData
       });
       if (response.ok) return await response.json();
-      throw new Error("API error creating request");
+      throw await buildApiError(response, "Error al crear solicitud");
     } catch (error) {
+      if (error.isApiResponse) throw error;
       console.warn("Backend createRequest failed, saving to mock data:", error.message);
 
       const requestType = formData.get("requestType");
@@ -666,6 +696,7 @@ export const apiClient = {
         reasonType,
         reasonDetail,
         status: "pendiente",
+        createdAt: new Date().toISOString(),
         dates,
         courses,
         evidenceRequired: reasonType === "salud",
@@ -692,8 +723,9 @@ export const apiClient = {
         const data = await response.json();
         return { ...data, request: normalizeRequest(data.request) };
       }
-      throw new Error("API error updating request");
+      throw await buildApiError(response, "Error al corregir solicitud");
     } catch (error) {
+      if (error.isApiResponse) throw error;
       console.warn("Backend updateRequest failed, updating mock data:", error.message);
 
       const requests = getMockRequests();
@@ -726,8 +758,9 @@ export const apiClient = {
         const data = await response.json();
         return { ...data, request: normalizeRequest(data.request) };
       }
-      throw new Error("API error appealing request");
+      throw await buildApiError(response, "Error al apelar solicitud");
     } catch (error) {
+      if (error.isApiResponse) throw error;
       console.warn("Backend appealRequest failed, updating mock data:", error.message);
 
       const requests = getMockRequests();
@@ -743,7 +776,6 @@ export const apiClient = {
     }
   },
 
-<<<<<<< HEAD
   // Notifications
   async getNotifications() {
     try {
@@ -1145,7 +1177,9 @@ export const apiClient = {
           { name: "Otros", value: otherCount }
         ]
       };
-=======
+    }
+  },
+
   async reviewRequest(id, status, reviewComment = "") {
     try {
       const response = await fetch(`${API_URL}/requests/${id}/review`, {
@@ -1157,9 +1191,9 @@ export const apiClient = {
         const data = await response.json();
         return { ...data, request: normalizeRequest(data.request) };
       }
-      const data = await response.json().catch(() => ({}));
-      throw new Error(data.message || "API error reviewing request");
+      throw await buildApiError(response, "Error al revisar solicitud");
     } catch (error) {
+      if (error.isApiResponse) throw error;
       console.warn("Backend reviewRequest failed, updating mock data:", error.message);
       const requests = getMockRequests();
       const idx = requests.findIndex((request) => request.id === id || request._id === id || request.code === id);
@@ -1227,7 +1261,6 @@ export const apiClient = {
     } catch (error) {
       console.warn("Backend updateAttendance failed, updating mock data:", error.message);
       return saveMockAttendanceRecord(recordId, status, note);
->>>>>>> main
     }
   }
 };

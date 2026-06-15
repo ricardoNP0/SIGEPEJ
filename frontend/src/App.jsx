@@ -72,25 +72,6 @@ const teacherRequests = [
 ];
 
 const pageDetails = {
-<<<<<<< HEAD
-  "/revision": {
-    title: "Bandeja de revision",
-    eyebrow: "Direccion",
-    description: "Cola de solicitudes pendientes, observadas y apeladas para aprobar, rechazar u observar con comentario obligatorio.",
-    actions: ["Aprobar", "Observar", "Rechazar"],
-  },
-  "/asistencia": {
-    title: "Control de asistencia",
-    eyebrow: "Docente",
-    description: "Lista de estudiantes inscritos por materia y paralelo. Permite registrar P/F; las licencias L solo se aplican por solicitud aprobada.",
-    actions: ["Elegir materia", "Registrar asistencia", "Ver licencias"],
-=======
-  "/notificaciones": {
-    title: "Notificaciones",
-    eyebrow: "Seguimiento",
-    description: "Avisos de aprobacion, rechazo, observaciones, apelaciones y solicitudes pendientes segun el rol activo.",
-    actions: ["Ver detalle", "Marcar como leida", "Abrir solicitud"],
-  },
   "/reportes": {
     title: "Reportes",
     eyebrow: "Analitica",
@@ -114,7 +95,6 @@ const pageDetails = {
     eyebrow: "Trazabilidad",
     description: "Historial de aprobaciones, cambios de estado, fecha, hora, usuario responsable y motivo de cada accion critica.",
     actions: ["Ver evento", "Filtrar usuario", "Revisar cambios"],
->>>>>>> main
   },
 };
 
@@ -149,7 +129,7 @@ function DashboardPage() {
       try {
         if (isStudent) {
           // Obtener solicitudes del estudiante
-          const userRequests = await apiClient.getMyRequests(user.username);
+          const userRequests = await apiClient.getMyRequests(user);
           setRequests(userRequests);
 
           // Calcular estadísticas dinámicamente
@@ -171,7 +151,7 @@ function DashboardPage() {
             { label: "Faltas por justificar", value: String(pendingAbsences), detail: "Requiere trámite", icon: AlertCircle },
           ]);
         } else if (isTeacher) {
-          const userRequests = await apiClient.getMyRequests(user.username);
+          const userRequests = await apiClient.getMyRequests(user);
           setRequests(userRequests);
 
           const requestedLicenses = userRequests.length;
@@ -221,7 +201,7 @@ function DashboardPage() {
 
   // Seleccionar datos según rol
   const displayStats = stats.length > 0 ? stats : (isStudent ? [] : isTeacher ? [] : globalStats);
-  const displayRequests = requests.length > 0 ? requests : recentRequests;
+  const displayRequests = isGlobalRole ? (requests.length > 0 ? requests : recentRequests) : requests;
 
   return (
     <section className="content-stack">

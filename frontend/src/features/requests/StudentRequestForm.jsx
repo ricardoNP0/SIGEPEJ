@@ -4,6 +4,13 @@ import { AuthContext } from "../../context/AuthContext.jsx";
 import { apiClient } from "../../api/client.js";
 import { AlertTriangle, FileText, Upload, CheckCircle2, ArrowLeft } from "lucide-react";
 
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export default function StudentRequestForm() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -51,7 +58,7 @@ export default function StudentRequestForm() {
 
     async function loadRequest() {
       try {
-        const requests = await apiClient.getMyRequests(user.username);
+        const requests = await apiClient.getMyRequests(user);
         const req = requests.find((r) => r.id === editId || r.code === editId);
         if (req) {
           setMode(req.mode);
@@ -88,6 +95,15 @@ export default function StudentRequestForm() {
     // Validation
     if (!date) {
       setErrorMsg("Debe seleccionar una fecha de ausencia.");
+      return;
+    }
+    const today = formatLocalDate(new Date());
+    if (mode === "permiso_anticipado" && date <= today) {
+      setErrorMsg("El permiso anticipado debe registrarse para una fecha futura.");
+      return;
+    }
+    if (mode === "justificacion_posterior" && date >= today) {
+      setErrorMsg("La justificacion posterior debe corresponder a una fecha pasada.");
       return;
     }
     if (!selectedCourse) {
@@ -258,6 +274,8 @@ export default function StudentRequestForm() {
                 className="form-input"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+                min={mode === "permiso_anticipado" ? formatLocalDate(new Date(Date.now() + 86400000)) : undefined}
+                max={mode === "justificacion_posterior" ? formatLocalDate(new Date(Date.now() - 86400000)) : undefined}
                 disabled={submitting || !!editId}
               />
             </div>

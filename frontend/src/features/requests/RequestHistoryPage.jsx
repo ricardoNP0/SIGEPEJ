@@ -4,6 +4,15 @@ import { AuthContext } from "../../context/AuthContext.jsx";
 import { apiClient } from "../../api/client.js";
 import { FileText, Eye, AlertCircle, RefreshCw, Send, X, ExternalLink, Calendar } from "lucide-react";
 
+function requestBelongsToUser(request, user) {
+  return [
+    request.requesterUsername && user?.username && request.requesterUsername === user.username,
+    request.requesterEmail && user?.email && request.requesterEmail === user.email,
+    request.requesterCode && user?.code && request.requesterCode === user.code,
+    request.requesterId && user?.id && String(request.requesterId) === String(user.id),
+  ].some(Boolean);
+}
+
 export default function RequestHistoryPage() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -27,8 +36,8 @@ export default function RequestHistoryPage() {
     setError("");
     setLoading(true);
     try {
-      const data = await apiClient.getMyRequests(user.username);
-      setRequests(data);
+      const data = await apiClient.getMyRequests(user);
+      setRequests(data.filter((request) => requestBelongsToUser(request, user)));
     } catch (err) {
       console.error("Error loading requests:", err);
       setError("No se pudo cargar el historial de solicitudes.");
@@ -168,7 +177,7 @@ export default function RequestHistoryPage() {
                       </span>
                     </td>
                     <td>
-                      {new Date(parseInt(req.id.replace("req-", "")) || Date.now()).toLocaleDateString("es-ES", {
+                      {new Date(req.createdAt || Date.now()).toLocaleDateString("es-ES", {
                         year: "numeric",
                         month: "2-digit",
                         day: "2-digit"

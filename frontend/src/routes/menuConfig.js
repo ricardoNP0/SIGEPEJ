@@ -51,6 +51,7 @@ export const menuByRole = {
     { label: "Dashboard", path: "/dashboard", icon: "dashboard" },
     { label: "Revision", path: "/revision", icon: "review" },
     { label: "Asistencia", path: "/asistencia", icon: "attendance" },
+    { label: "Notificaciones", path: "/notificaciones", icon: "notifications" },
     { label: "Reportes", path: "/reportes", icon: "reports" },
     { label: "Auditoria", path: "/auditoria", icon: "audit" },
   ],
@@ -63,9 +64,11 @@ export const menuByRole = {
   ],
   admin: [
     { label: "Dashboard", path: "/dashboard", icon: "dashboard" },
+    { label: "Revision", path: "/revision", icon: "review" },
     { label: "Usuarios", path: "/usuarios", icon: "users" },
     { label: "Catalogos", path: "/catalogos", icon: "catalogs" },
     { label: "Reportes", path: "/reportes", icon: "reports" },
     { label: "Auditoria", path: "/auditoria", icon: "audit" },
+    { label: "Notificaciones", path: "/notificaciones", icon: "notifications" },
   ],
 };

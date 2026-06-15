@@ -1,0 +1,191 @@
+{
+  "info": {
+    "_postman_id": "4bb52b2d-6dc2-4e13-a1a7-sigepej2026",
+    "name": "SIGEPEJ API",
+    "description": "Coleccion reproducible para T23. Ejecute Login y copie/guarde los IDs devueltos en las variables de la coleccion.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "token", "value": "" },
+    { "key": "requestId", "value": "" },
+    { "key": "courseId", "value": "" },
+    { "key": "recordId", "value": "" },
+    { "key": "notificationId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "02 Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json();",
+              "if (data.token) pm.collectionVariables.set('token', data.token);",
+              "pm.test('Login correcto', () => pm.expect(pm.response.code).to.equal(200));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"identifier\": \"admin\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "03 Auth Me",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/auth/me"
+      }
+    },
+    {
+      "name": "04 Mis Solicitudes",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/requests/my"
+      }
+    },
+    {
+      "name": "05 Crear Solicitud",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json();",
+              "const id = data.request && (data.request._id || data.request.id);",
+              "if (id) pm.collectionVariables.set('requestId', id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "requestType", "value": "ausencia_estudiantil", "type": "text" },
+            { "key": "mode", "value": "permiso_anticipado", "type": "text" },
+            { "key": "reasonType", "value": "academico", "type": "text" },
+            { "key": "reasonDetail", "value": "Prueba de solicitud desde Postman", "type": "text" },
+            { "key": "dates", "value": "[{\"date\":\"2026-12-10\",\"courseCode\":\"WEB3-G1-2026-1\"}]", "type": "text" }
+          ]
+        },
+        "url": "{{baseUrl}}/requests"
+      }
+    },
+    {
+      "name": "06 Subir Evidencia",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "evidence", "type": "file", "src": "" }
+          ]
+        },
+        "url": "{{baseUrl}}/requests/{{requestId}}/evidence"
+      }
+    },
+    {
+      "name": "07 Listar Solicitudes para Revision",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/requests?status=pendiente"
+      }
+    },
+    {
+      "name": "08 Revisar Solicitud",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"observado\",\n  \"reviewComment\": \"Adjuntar documento legible\"\n}"
+        },
+        "url": "{{baseUrl}}/requests/{{requestId}}/review"
+      }
+    },
+    {
+      "name": "09 Cargar Asistencia",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json();",
+              "const first = data.data && data.data.attendance && data.data.attendance[0];",
+              "if (first) pm.collectionVariables.set('recordId', first.recordId);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/attendance?courseId={{courseId}}&date=2026-06-15"
+      }
+    },
+    {
+      "name": "10 Marcar Asistencia",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"P\",\n  \"note\": \"Registro desde Postman\"\n}"
+        },
+        "url": "{{baseUrl}}/attendance/{{recordId}}"
+      }
+    },
+    {
+      "name": "11 Notificaciones",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/notifications"
+      }
+    },
+    {
+      "name": "12 Marcar Notificacion Leida",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/notifications/{{notificationId}}/read"
+      }
+    },
+    {
+      "name": "13 Auditoria",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/audit"
+      }
+    }
+  ]
+}

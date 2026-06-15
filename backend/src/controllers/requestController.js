@@ -35,6 +35,33 @@ function inferMode(dates) {
   return hasPastDate ? "justificacion_posterior" : "permiso_anticipado";
 }
 
+function ownsRequest(request, user) {
+  return Boolean(user && String(request.requester) === String(user._id));
+}
+
+function validateRequestDates(mode, dates) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (const item of dates) {
+    const rawDate = typeof item === "string" ? item : item.date;
+    const date = new Date(rawDate);
+    date.setHours(0, 0, 0, 0);
+
+    if (Number.isNaN(date.getTime())) {
+      return "La solicitud contiene una fecha invalida";
+    }
+    if (mode === "permiso_anticipado" && date <= today) {
+      return "El permiso anticipado debe registrarse para una fecha futura";
+    }
+    if (mode === "justificacion_posterior" && date >= today) {
+      return "La justificacion posterior debe corresponder a una fecha pasada";
+    }
+  }
+
+  return null;
+}
+
 async function getRequester(req, requesterRole) {
   if (req.user) return req.user;
 
@@ -220,7 +247,7 @@ export const getMyRequests = async (req, res) => {
 
 export const createRequest = async (req, res) => {
   try {
-    const requesterRole = normalizeRole(req.body.requesterRole || req.user?.role);
+    const requesterRole = normalizeRole(req.user?.role);
     const requester = await getRequester(req, requesterRole);
 
     if (!requester) {
@@ -236,6 +263,12 @@ export const createRequest = async (req, res) => {
         success: false,
         message: "Debe enviar al menos una fecha",
       });
+    }
+
+    const mode = req.body.mode || inferMode(rawDates);
+    const dateError = validateRequestDates(mode, rawDates);
+    if (dateError) {
+      return res.status(400).json({ success: false, message: dateError });
     }
 
     const rawCourses = parseJsonField(req.body.courseIds, parseJsonField(req.body.courses));
@@ -262,13 +295,20 @@ export const createRequest = async (req, res) => {
     const evidence = buildEvidence(req.file);
     const reasonType = req.body.reasonType || "otro";
 
+    if (reasonType === "salud" && !evidence) {
+      return res.status(400).json({
+        success: false,
+        message: "La evidencia es obligatoria para solicitudes por salud",
+      });
+    }
+
     const request = await Request.create({
       requester: requester._id,
       requesterRole,
       requestType:
         req.body.requestType ||
         (requesterRole === ROLES.TEACHER ? "ausencia_docente" : "ausencia_estudiantil"),
-      mode: req.body.mode || inferMode(rawDates),
+      mode,
       reasonType,
       reasonDetail: req.body.reasonDetail || "Solicitud registrada desde frontend",
       status: "pendiente",
@@ -324,6 +364,10 @@ export const uploadRequestEvidence = async (req, res) => {
       return res.status(404).json({ message: "Solicitud no encontrada" });
     }
 
+    if (!ownsRequest(request, req.user)) {
+      return res.status(403).json({ message: "No puede modificar una solicitud ajena" });
+    }
+
     if (!req.file) {
       return res.status(400).json({ message: "Debe enviar un archivo" });
     }
@@ -372,12 +416,12 @@ export const reviewRequest = async (req, res) => {
       });
     }
 
-    const actor = await getActor(req, ROLES.DIRECTOR);
+    const actor = req.user;
     if (!actor) {
       await session.abortTransaction();
-      return res.status(404).json({
+      return res.status(401).json({
         success: false,
-        message: "No existe usuario responsable para revisar",
+        message: "Usuario no autenticado",
       });
     }
 
@@ -469,6 +513,14 @@ export const updateObservedRequest = async (req, res) => {
       return res.status(404).json({ success: false, message: "Solicitud no encontrada" });
     }
 
+    if (!ownsRequest(request, req.user)) {
+      await session.abortTransaction();
+      return res.status(403).json({
+        success: false,
+        message: "No puede corregir una solicitud ajena",
+      });
+    }
+
     if (request.status !== "observado") {
       await session.abortTransaction();
       return res.status(409).json({
@@ -478,6 +530,13 @@ export const updateObservedRequest = async (req, res) => {
     }
 
     const rawDates = parseJsonField(req.body.dates, request.dates);
+    const nextMode = req.body.mode || inferMode(rawDates);
+    const dateError = validateRequestDates(nextMode, rawDates);
+    if (dateError) {
+      await session.abortTransaction();
+      return res.status(400).json({ success: false, message: dateError });
+    }
+
     const rawCourses = parseJsonField(req.body.courseIds, parseJsonField(req.body.courses, request.courses));
     const courseIds = await resolveCourseIds(rawDates, rawCourses);
     const formattedDates = [];
@@ -501,10 +560,19 @@ export const updateObservedRequest = async (req, res) => {
     const requester = await User.findById(request.requester).session(session);
     const director = await User.findOne({ role: ROLES.DIRECTOR }).session(session);
     const evidence = buildEvidence(req.file);
+    const nextReasonType = req.body.reasonType || request.reasonType;
 
-    request.reasonType = req.body.reasonType || request.reasonType;
+    if (nextReasonType === "salud" && !evidence && !request.evidence?.url) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "La evidencia es obligatoria para solicitudes por salud",
+      });
+    }
+
+    request.reasonType = nextReasonType;
     request.reasonDetail = req.body.reasonDetail || request.reasonDetail;
-    request.mode = req.body.mode || inferMode(formattedDates);
+    request.mode = nextMode;
     request.dates = formattedDates.length > 0 ? formattedDates : request.dates;
     request.courses = courseIds.length > 0 ? courseIds : request.courses;
     request.status = "pendiente";
@@ -585,6 +653,14 @@ export const appealRejectedRequest = async (req, res) => {
     if (!request) {
       await session.abortTransaction();
       return res.status(404).json({ success: false, message: "Solicitud no encontrada" });
+    }
+
+    if (!ownsRequest(request, req.user)) {
+      await session.abortTransaction();
+      return res.status(403).json({
+        success: false,
+        message: "No puede apelar una solicitud ajena",
+      });
     }
 
     if (request.status !== "rechazado") {

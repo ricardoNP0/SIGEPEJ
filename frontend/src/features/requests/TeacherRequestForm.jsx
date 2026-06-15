@@ -2,7 +2,14 @@ import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext.jsx";
 import { apiClient } from "../../api/client.js";
-import { Plus, Trash2, CheckCircle2, AlertTriangle, ArrowLeft, Calendar } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, AlertTriangle, ArrowLeft, Calendar, Upload } from "lucide-react";
+
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export default function TeacherRequestForm() {
   const { user } = useContext(AuthContext);
@@ -17,6 +24,7 @@ export default function TeacherRequestForm() {
   // Form states
   const [reasonType, setReasonType] = useState("academico");
   const [reasonDetail, setReasonDetail] = useState("");
+  const [evidenceFile, setEvidenceFile] = useState(null);
   
   // Checkboxes for selected courses
   const [selectedCourses, setSelectedCourses] = useState({}); // { courseCode: boolean }
@@ -115,6 +123,7 @@ export default function TeacherRequestForm() {
     }
 
     // Validate date rows
+    const today = formatLocalDate(new Date());
     for (let i = 0; i < datesList.length; i++) {
       const row = datesList[i];
       if (!row.date) {
@@ -125,10 +134,19 @@ export default function TeacherRequestForm() {
         setErrorMsg(`Seleccione una materia para la fecha en la fila #${i + 1}.`);
         return;
       }
+      if (row.date <= today) {
+        setErrorMsg(`La fecha en la fila #${i + 1} debe ser futura.`);
+        return;
+      }
     }
 
     if (!reasonDetail.trim()) {
       setErrorMsg("Por favor ingrese el detalle o justificativo de la ausencia.");
+      return;
+    }
+
+    if (reasonType === "salud" && !evidenceFile) {
+      setErrorMsg("Debe adjuntar evidencia para solicitudes por salud.");
       return;
     }
 
@@ -153,6 +171,10 @@ export default function TeacherRequestForm() {
       });
 
       formData.append("dates", JSON.stringify(formattedDates));
+
+      if (evidenceFile) {
+        formData.append("evidence", evidenceFile);
+      }
 
       await apiClient.createRequest(formData);
       setSuccessMsg("¡Solicitud docente enviada con éxito!");
@@ -280,6 +302,7 @@ export default function TeacherRequestForm() {
                       style={{ padding: "6px 10px" }}
                       value={row.date}
                       onChange={(e) => updateDateRow(index, "date", e.target.value)}
+                      min={formatLocalDate(new Date(Date.now() + 86400000))}
                       disabled={submitting}
                     />
                   </div>
@@ -328,6 +351,37 @@ export default function TeacherRequestForm() {
               onChange={(e) => setReasonDetail(e.target.value)}
               disabled={submitting}
             />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="teacher-evidence">
+              Evidencia {reasonType === "salud" && <span style={{ color: "var(--danger)" }}>*</span>}
+            </label>
+            <div
+              className="file-upload-zone"
+              onClick={() => document.getElementById("teacher-evidence").click()}
+            >
+              <Upload size={20} className="file-upload-icon" />
+              <span style={{ fontSize: "13px", color: "var(--ink-700)" }}>
+                Haga clic para seleccionar archivo
+              </span>
+              <small style={{ fontSize: "11px", color: "var(--ink-500)" }}>
+                PDF, PNG o JPG hasta 10MB
+              </small>
+              <input
+                id="teacher-evidence"
+                type="file"
+                style={{ display: "none" }}
+                onChange={(event) => setEvidenceFile(event.target.files?.[0] || null)}
+                disabled={submitting}
+                accept=".pdf,.png,.jpg,.jpeg"
+              />
+            </div>
+            {evidenceFile && (
+              <div className="file-name-preview">
+                Archivo seleccionado: {evidenceFile.name} ({(evidenceFile.size / 1024).toFixed(1)} KB)
+              </div>
+            )}
           </div>
 
           {/* Submit/Cancel */}

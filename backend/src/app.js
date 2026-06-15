@@ -9,7 +9,6 @@ import healthRoutes from "./routes/healthRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import requestRoutes from "./routes/requestRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
-import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import catalogRoutes from "./routes/catalogRoutes.js";
 import auditRoutes from "./routes/auditRoutes.js";
@@ -24,6 +23,7 @@ export function createApp() {
       const allowedOrigins = Array.isArray(env.frontendUrl) 
         ? env.frontendUrl 
         : [env.frontendUrl];
+      allowedOrigins.push("http://127.0.0.1:5173", "http://localhost:5173");
       
       // Permitir sin origin (para preflight y desarrollo)
       // o si está en la lista de permitidos
@@ -58,7 +58,6 @@ export function createApp() {
   app.use("/api/requests", requestRoutes);
   app.use("/api/attendance", attendanceRoutes);
   app.use("/api/notifications", notificationRoutes);
-  app.use("/api/auth", authRoutes);
   app.use("/api/users", userRoutes);
   app.use("/api/catalogs", catalogRoutes);
   app.use("/api/audit", auditRoutes);
