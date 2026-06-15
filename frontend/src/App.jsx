@@ -18,6 +18,8 @@ import {
 import { AppLayout } from "./layouts/AppLayout.jsx";
 import { AuthProvider, AuthContext } from "./context/AuthContext.jsx";
 import LoginPage from "./features/auth/LoginPage.jsx";
+import AttendancePage from "./features/attendance/AttendancePage.jsx";
+import RevisionPage from "./features/requests/RevisionPage.jsx";
 import StudentRequestForm from "./features/requests/StudentRequestForm.jsx";
 import TeacherRequestForm from "./features/requests/TeacherRequestForm.jsx";
 import RequestHistoryPage from "./features/requests/RequestHistoryPage.jsx";
@@ -70,6 +72,7 @@ const teacherRequests = [
 ];
 
 const pageDetails = {
+<<<<<<< HEAD
   "/revision": {
     title: "Bandeja de revision",
     eyebrow: "Direccion",
@@ -81,6 +84,37 @@ const pageDetails = {
     eyebrow: "Docente",
     description: "Lista de estudiantes inscritos por materia y paralelo. Permite registrar P/F; las licencias L solo se aplican por solicitud aprobada.",
     actions: ["Elegir materia", "Registrar asistencia", "Ver licencias"],
+=======
+  "/notificaciones": {
+    title: "Notificaciones",
+    eyebrow: "Seguimiento",
+    description: "Avisos de aprobacion, rechazo, observaciones, apelaciones y solicitudes pendientes segun el rol activo.",
+    actions: ["Ver detalle", "Marcar como leida", "Abrir solicitud"],
+  },
+  "/reportes": {
+    title: "Reportes",
+    eyebrow: "Analitica",
+    description: "Reportes por carrera, materia, estado, docente, estudiante y periodo academico.",
+    actions: ["Filtrar", "Exportar", "Ver indicadores"],
+  },
+  "/catalogos": {
+    title: "Catalogos academicos",
+    eyebrow: "Base institucional",
+    description: "Pantallas placeholder para carreras, materias, cursos, paralelos, docentes e inscripciones simuladas.",
+    actions: ["Carreras", "Materias", "Inscripciones"],
+  },
+  "/usuarios": {
+    title: "Usuarios y roles",
+    eyebrow: "Administrador",
+    description: "Administracion visual de estudiantes, docentes, directores, secretarios y permisos de acceso.",
+    actions: ["Crear usuario", "Asignar rol", "Bloquear acceso"],
+  },
+  "/auditoria": {
+    title: "Auditoria",
+    eyebrow: "Trazabilidad",
+    description: "Historial de aprobaciones, cambios de estado, fecha, hora, usuario responsable y motivo de cada accion critica.",
+    actions: ["Ver evento", "Filtrar usuario", "Revisar cambios"],
+>>>>>>> main
   },
 };
 
@@ -333,6 +367,8 @@ export default function App() {
           <Route path="nueva-solicitud" element={<StudentRequestForm />} />
           <Route path="solicitud-docente" element={<TeacherRequestForm />} />
           <Route path="mis-solicitudes" element={<RequestHistoryPage />} />
+          <Route path="revision" element={<RevisionPage />} />
+          <Route path="asistencia" element={<AttendancePage />} />
           <Route path="historial" element={<Navigate to="/mis-solicitudes" replace />} />
           <Route path="notificaciones" element={<NotificationsPage />} />
 
