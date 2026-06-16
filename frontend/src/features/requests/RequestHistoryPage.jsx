@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext.jsx";
 import { apiClient } from "../../api/client.js";
 import EditObservedRequest from "./EditObservedRequest.jsx";
+import AppealForm from "./AppealForm.jsx";
 import { FileText, Eye, AlertCircle, RefreshCw, Send, X, ExternalLink, Calendar } from "lucide-react";
 
 export default function RequestHistoryPage() {
@@ -15,6 +16,7 @@ export default function RequestHistoryPage() {
 
   // Modals state
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [selectedAppealRequest, setSelectedAppealRequest] = useState(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isAppealOpen, setIsAppealOpen] = useState(false);
   const [isCorrectOpen, setIsCorrectOpen] = useState(false);
@@ -242,7 +244,7 @@ export default function RequestHistoryPage() {
                         
                         {(req.status.toLowerCase() === "rechazada" || req.status.toLowerCase() === "rechazado") && (
                           <button
-                            onClick={() => openAppeal(req)}
+                            onClick={() => setSelectedAppealRequest(req)}
                             className="btn-secondary btn-danger"
                             style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px" }}
                           >
@@ -470,6 +472,17 @@ export default function RequestHistoryPage() {
             setIsCorrectOpen(false);
             setSelectedRequest(null);
             await loadHistory();
+          }}
+        />
+      )}
+
+      {selectedAppealRequest && (
+        <AppealForm
+          request={selectedAppealRequest}
+          onClose={() => setSelectedAppealRequest(null)}
+          onSuccess={() => {
+            setSelectedAppealRequest(null);
+            loadHistory();
           }}
         />
       )}

@@ -375,29 +375,16 @@ export const apiClient = {
   },
 
   // Apelar Request
-  async appealRequest(id, justification) {
-    try {
-      const response = await fetch(`${API_URL}/requests/${id}/appeal`, {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify({ justification })
-      });
-      if (response.ok) return await response.json();
-      throw new Error("API error appealing request");
-    } catch (error) {
-      console.warn("Backend appealRequest failed, updating mock data:", error.message);
-
-      const requests = getMockRequests();
-      const idx = requests.findIndex(r => r.id === id || r.code === id);
-      if (idx !== -1) {
-        requests[idx].status = "pendiente";
-        requests[idx].reasonDetail = `${requests[idx].reasonDetail}\n[APELACION]: ${justification}`;
-        requests[idx].reviewComment = "";
-        saveMockRequests(requests);
-        return { ok: true, request: requests[idx] };
+  async appealRequest(id, formData) {
+    return this.patch(
+      `/requests/${id}/appeal`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
       }
-      throw new Error("Solicitud no encontrada en mock DB");
-    }
+    );
   },
 
   async patch(path, body, options = {}) {

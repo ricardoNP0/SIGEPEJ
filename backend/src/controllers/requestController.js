@@ -327,7 +327,92 @@ export const reviewRequest = async (req, res) => {
     });
   }
 };
+export const appealRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { appealComment } = req.body;
 
+    if (!appealComment || !appealComment.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "El argumento de apelación es obligatorio"
+      });
+    }
+
+    const request = await Request.findById(id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Solicitud no encontrada"
+      });
+    }
+
+    if (request.status !== "rechazado") {
+      return res.status(400).json({
+        success: false,
+        message: "Solo pueden apelarse solicitudes rechazadas"
+      });
+    }
+
+    request.appealComment = appealComment;
+
+    if (req.file) {
+      request.evidence = {
+        url: `/uploads/evidences/${req.file.filename}`,
+        localPath: req.file.path,
+        originalName: req.file.originalname
+      };
+    }
+
+    request.status = "pendiente";
+    request.currentReviewer = null;
+
+    await request.save();
+
+    await AuditLog.create({
+      actor: req.user._id,
+      action: "apelar_solicitud",
+      entityType: "Request",
+      entityId: request._id,
+      metadata: {
+        requestId: request._id,
+        appealComment
+      },
+      ipAddress: req.ip,
+      userAgent: req.headers["user-agent"]
+    });
+
+    const director = await User.findOne({
+      role: ROLES.DIRECTOR
+    });
+
+    if (director) {
+      await Notification.create({
+        user: director._id,
+        title: "Nueva apelación",
+        message: "Nueva apelación pendiente de revisión",
+        type: "solicitud",
+        relatedRequest: request._id
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Apelación enviada",
+      request
+    });
+
+  } catch (error) {
+    console.error("Error en appealRequest:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Error al enviar apelación",
+      error: error.message
+    });
+  }
+};
 export const correctObservedRequest = async (req, res) => {
   try {
     const { id } = req.params;

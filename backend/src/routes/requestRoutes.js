@@ -7,7 +7,8 @@ import {
   uploadRequestEvidence,
   getRequests,
   reviewRequest,
-  correctObservedRequest
+  correctObservedRequest,
+  appealRequest
 } from "../controllers/requestController.js";
 import {
   uploadEvidence,
@@ -35,5 +36,11 @@ router.patch(
   authMiddleware,
   uploadEvidence.single("evidence"),
   correctObservedRequest
+);
+router.patch(
+  "/:id/appeal",
+  authMiddleware,
+  uploadEvidence.single("evidence"),
+  appealRequest
 );
 export default router;
