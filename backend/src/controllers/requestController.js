@@ -5,6 +5,8 @@ import { Course } from "../models/Course.js";
 import { Notification } from "../models/Notification.js";
 import { Request } from "../models/Request.js";
 import { User } from "../models/User.js";
+import { applyAttendanceImpact } from "../services/attendanceImpactService.js";
+
 
 function parseJsonField(value, fallback = []) {
   if (!value) return fallback;
@@ -228,18 +230,25 @@ export const getRequests = async (req, res) => {
 export const reviewRequest = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, reviewComment } = req.body;
+    const { action, comment } = req.body;
 
-    const allowedStatus = [
-      "aprobado",
-      "observado",
-      "rechazado"
+    const allowedActions = [
+      "aprobar",
+      "observar",
+      "rechazar"
     ];
 
-    if (!allowedStatus.includes(status)) {
+    if (!allowedActions.includes(action)) {
       return res.status(400).json({
         success: false,
-        message: "Estado inválido"
+        message: "Accion invalida"
+      });
+    }
+
+    if (!comment || !comment.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "El comentario es obligatorio"
       });
     }
 
@@ -252,26 +261,69 @@ export const reviewRequest = async (req, res) => {
       });
     }
 
-    request.status = status;
-    request.reviewComment = reviewComment || "";
-    request.reviewedAt = new Date();
+    let newStatus;
 
-    if (req.user) {
-      request.reviewer = req.user._id;
+    switch (action) {
+      case "aprobar":
+        newStatus = "aprobado";
+        break;
+
+      case "observar":
+        newStatus = "observado";
+        break;
+
+      case "rechazar":
+        newStatus = "rechazado";
+        break;
     }
+
+    request.status = newStatus;
+    request.reviewComment = comment;
+    request.reviewer = req.user._id;
+    request.reviewedAt = new Date();
 
     await request.save();
 
-    return res.json({
+    await AuditLog.create({
+      actor: req.user._id,
+      action: `revision_${action}`,
+      entityType: "Request",
+      entityId: request._id,
+      metadata: {
+        requestId: request._id,
+        previousStatus: "pendiente",
+        newStatus,
+        comment
+      },
+      ipAddress: req.ip,
+      userAgent: req.headers["user-agent"]
+    });
+
+    await Notification.create({
+      user: request.requester,
+      title: "Solicitud revisada",
+      message: `Su solicitud fue ${newStatus}. Comentario: ${comment}`,
+      type: "revision",
+      relatedRequest: request._id
+    });
+
+    if (action === "aprobar") {
+      await applyAttendanceImpact(request);
+    }
+
+    return res.status(200).json({
       success: true,
+      message: `Solicitud ${newStatus} correctamente`,
       request
     });
+
   } catch (error) {
-    console.error(error);
+    console.error("Error en reviewRequest:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Error al revisar solicitud"
+      message: "Error al revisar solicitud",
+      error: error.message
     });
   }
 };
