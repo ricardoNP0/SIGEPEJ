@@ -327,3 +327,67 @@ export const reviewRequest = async (req, res) => {
     });
   }
 };
+
+export const correctObservedRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reasonDetail } = req.body;
+
+    const request = await Request.findById(id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Solicitud no encontrada"
+      });
+    }
+
+    if (request.status !== "observado" && request.status !== "observada") {
+      return res.status(400).json({
+        success: false,
+        message: "Solo pueden corregirse solicitudes observadas"
+      });
+    }
+
+    request.reasonDetail = reasonDetail;
+
+    if (req.file) {
+      request.evidence = {
+        url: `/uploads/evidences/${req.file.filename}`,
+        localPath: req.file.path,
+        originalName: req.file.originalname
+      };
+    }
+
+    request.status = "pendiente";
+    request.reviewComment = "";
+    request.correctedAt = new Date();
+
+    await request.save();
+
+    await AuditLog.create({
+      actor: req.user._id,
+      action: "corregir_solicitud",
+      entityType: "Request",
+      entityId: request._id,
+      metadata: {
+        requestId: request._id
+      },
+      ipAddress: req.ip,
+      userAgent: req.headers["user-agent"]
+    });
+
+    return res.json({
+      success: true,
+      message: "Solicitud corregida y enviada nuevamente",
+      request
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Error al corregir solicitud"
+    });
+  }
+};

@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext.jsx";
 import { apiClient } from "../../api/client.js";
+import EditObservedRequest from "./EditObservedRequest.jsx";
 import { FileText, Eye, AlertCircle, RefreshCw, Send, X, ExternalLink, Calendar } from "lucide-react";
 
 export default function RequestHistoryPage() {
@@ -16,6 +17,7 @@ export default function RequestHistoryPage() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isAppealOpen, setIsAppealOpen] = useState(false);
+  const [isCorrectOpen, setIsCorrectOpen] = useState(false);
   
   // Appeal form state
   const [appealJustification, setAppealJustification] = useState("");
@@ -42,8 +44,9 @@ export default function RequestHistoryPage() {
   }, [user]);
 
   // Handle Edit/Correct click
-  const handleCorrect = (reqCodeOrId) => {
-    navigate(`/nueva-solicitud?edit=${reqCodeOrId}`);
+  const handleCorrect = (request) => {
+    setSelectedRequest(request);
+    setIsCorrectOpen(true);
   };
 
   // Open Appeal Modal
@@ -229,7 +232,7 @@ export default function RequestHistoryPage() {
                         {/* CONDITIONAL ACTION BUTTONS BASED ON STATUS */}
                         {(req.status.toLowerCase() === "observada" || req.status.toLowerCase() === "observado") && (
                           <button
-                            onClick={() => handleCorrect(req.id)}
+                            onClick={() => handleCorrect(req)}
                             className="btn-primary"
                             style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px" }}
                           >
@@ -454,6 +457,21 @@ export default function RequestHistoryPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {isCorrectOpen && selectedRequest && (
+        <EditObservedRequest
+          request={selectedRequest}
+          onClose={() => {
+            setIsCorrectOpen(false);
+            setSelectedRequest(null);
+          }}
+          onSuccess={async () => {
+            setIsCorrectOpen(false);
+            setSelectedRequest(null);
+            await loadHistory();
+          }}
+        />
       )}
     </section>
   );

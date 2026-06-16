@@ -398,5 +398,36 @@ export const apiClient = {
       }
       throw new Error("Solicitud no encontrada en mock DB");
     }
+  },
+
+  async patch(path, body, options = {}) {
+    try {
+      const isMultipart = body instanceof FormData;
+      const headers = getHeaders(isMultipart);
+      const mergedHeaders = {
+        ...headers,
+        ...options.headers,
+      };
+
+      if (isMultipart) {
+        if (mergedHeaders["Content-Type"]?.startsWith("multipart/form-data")) {
+          delete mergedHeaders["Content-Type"];
+        }
+      }
+
+      const response = await fetch(`${API_URL}${path}`, {
+        method: "PATCH",
+        headers: mergedHeaders,
+        body,
+      });
+
+      if (response.ok) return await response.json();
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.message || "Error API patch request");
+    } catch (error) {
+      throw error;
+    }
   }
 };
+
+export default apiClient;

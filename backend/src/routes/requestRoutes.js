@@ -2,12 +2,12 @@ import { Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { requireRole } from "../middlewares/requireRole.js";
 import { ROLES } from "../constants/roles.js";
-
 import {
   createRequest,
   uploadRequestEvidence,
   getRequests,
-  reviewRequest
+  reviewRequest,
+  correctObservedRequest
 } from "../controllers/requestController.js";
 import {
   uploadEvidence,
@@ -29,5 +29,11 @@ router.patch(
   authMiddleware,
   requireRole(ROLES.DIRECTOR),
   reviewRequest
+);
+router.patch(
+  "/:id/correct",
+  authMiddleware,
+  uploadEvidence.single("evidence"),
+  correctObservedRequest
 );
 export default router;
