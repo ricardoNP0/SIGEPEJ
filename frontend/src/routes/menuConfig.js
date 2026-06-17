@@ -1,8 +1,8 @@
-export const roleOptions = [
+﻿export const roleOptions = [
   { value: "estudiante", label: "Estudiante" },
   { value: "docente", label: "Docente" },
   { value: "director", label: "Director de Carrera" },
-  { value: "secretario", label: "Secretario Academico" },
+  { value: "secretario", label: "Secretario Académico" },
   { value: "admin", label: "Administrador" },
 ];
 
@@ -25,7 +25,7 @@ export const usersByRole = {
   secretario: {
     initials: "SS",
     name: "Secretaria Sistemas",
-    role: "Secretario Academico",
+    role: "Secretario Académico",
   },
   admin: {
     initials: "AD",
@@ -49,23 +49,24 @@ export const menuByRole = {
   ],
   director: [
     { label: "Dashboard", path: "/dashboard", icon: "dashboard" },
-    { label: "Revision", path: "/revision", icon: "review" },
+    { label: "Revisión", path: "/revision", icon: "review" },
     { label: "Asistencia", path: "/asistencia", icon: "attendance" },
     { label: "Reportes", path: "/reportes", icon: "reports" },
-    { label: "Auditoria", path: "/auditoria", icon: "audit" },
+    { label: "Auditoría", path: "/auditoria", icon: "audit" },
   ],
   secretario: [
     { label: "Dashboard", path: "/dashboard", icon: "dashboard" },
-    { label: "Revision", path: "/revision", icon: "review" },
-    { label: "Catalogos", path: "/catalogos", icon: "catalogs" },
+    { label: "Revisión", path: "/revision", icon: "review" },
+    { label: "Catálogos", path: "/catalogos", icon: "catalogs" },
     { label: "Reportes", path: "/reportes", icon: "reports" },
     { label: "Notificaciones", path: "/notificaciones", icon: "notifications" },
   ],
   admin: [
     { label: "Dashboard", path: "/dashboard", icon: "dashboard" },
     { label: "Usuarios", path: "/usuarios", icon: "users" },
-    { label: "Catalogos", path: "/catalogos", icon: "catalogs" },
+    { label: "Catálogos", path: "/catalogos", icon: "catalogs" },
     { label: "Reportes", path: "/reportes", icon: "reports" },
-    { label: "Auditoria", path: "/auditoria", icon: "audit" },
+    { label: "Auditoría", path: "/auditoria", icon: "audit" },
   ],
 };
+

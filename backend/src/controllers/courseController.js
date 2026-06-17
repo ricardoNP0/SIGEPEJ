@@ -13,6 +13,7 @@ function toCourseOption(course) {
     subjectCode: course.subject?.code || "",
     parallel: course.parallel,
     period: course.period,
+    schedule: course.schedule || [],
     teacherName: course.teacher
       ? `${course.teacher.firstName} ${course.teacher.lastName}`
       : "",

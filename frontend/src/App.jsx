@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+﻿import { Navigate, Route, Routes } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   Activity,
@@ -26,8 +26,8 @@ import ReportsPage from "./features/reports/ReportsPage.jsx";
 import AuditPage from "./features/audit/AuditPage.jsx";
 
 const recentRequests = [
-  { code: "SOL-2026-001", owner: "Ricardo Nunez", type: "Permiso anticipado", status: "pendiente", date: "2026-06-10" },
-  { code: "SOL-2026-002", owner: "Daniel Escobar", type: "Justificacion posterior", status: "observada", date: "2026-06-02" },
+  { code: "SOL-2026-001", owner: "Ricardo Núñez", type: "Permiso anticipado", status: "pendiente", date: "2026-06-10" },
+  { code: "SOL-2026-002", owner: "Daniel Escobar", type: "Justificación posterior", status: "observada", date: "2026-06-02" },
   { code: "SOL-2026-003", owner: "Ana Rojas", type: "Ausencia docente", status: "aprobada", date: "2026-06-12" },
 ];
 
@@ -79,8 +79,8 @@ function DashboardPage() {
   }, []);
 
   const dashboardStats = [
-    { label: "Solicitudes pendientes", value: summary.pendingRequests, detail: "Requieren revision", icon: Clock3 },
-    { label: "Aprobadas", value: summary.approvedRequests, detail: "Con registro de auditoria", icon: CheckCircle2 },
+    { label: "Solicitudes pendientes", value: summary.pendingRequests, detail: "Requieren revisión", icon: Clock3 },
+    { label: "Aprobadas", value: summary.approvedRequests, detail: "Con registro de auditoría", icon: CheckCircle2 },
     { label: "Licencias aplicadas", value: summary.licenseRecords, detail: "Marcadas como L", icon: ShieldCheck },
     { label: "Usuarios demo", value: summary.totalUsers, detail: "Base seed cargada", icon: UsersRound },
   ];
@@ -92,7 +92,7 @@ function DashboardPage() {
         <h1>Panel SIGEPEJ</h1>
         <p>
           Base visual para que el equipo conecte solicitudes, asistencia,
-          notificaciones, auditoria y reportes sin rehacer la navegacion.
+          notificaciones, auditoría y reportes sin rehacer la navegación.
         </p>
       </div>
 
@@ -159,7 +159,7 @@ function DashboardPage() {
             <code>{import.meta.env.VITE_API_URL}</code>
           </div>
           <p className="panel-copy">
-            Conecta solicitudes, asistencia, notificaciones, auditoria y reportes
+            Conecta solicitudes, asistencia, notificaciones, auditoría y reportes
             usando esta misma base de layout.
           </p>
         </section>
@@ -206,3 +206,5 @@ export default function App() {
     </AuthProvider>
   );
 }
+
+

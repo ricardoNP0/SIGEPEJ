@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+﻿import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import { connectDatabase } from "../src/config/database.js";
 import { ROLES } from "../src/constants/roles.js";
@@ -58,7 +58,7 @@ async function seedUsers() {
     },
     {
       firstName: "Secretaria",
-      lastName: "Academica",
+      lastName: "Académica",
       email: "secretaria.sistemas@univalle.edu",
       username: "secretaria_sistemas",
       passwordHash,
@@ -85,7 +85,7 @@ async function seedUsers() {
     },
     {
       firstName: "Ricardo",
-      lastName: "Nunez del Prado",
+      lastName: "Núñez del Prado",
       email: "ricardo.nunez@univalle.edu",
       username: "ricardo_np",
       passwordHash,
@@ -102,7 +102,7 @@ async function seedUsers() {
       code: "EST-2026-002",
     },
     {
-      firstName: "Josue",
+      firstName: "Josué",
       lastName: "Rodriguez Vera",
       email: "josue.rodriguez@univalle.edu",
       username: "josue_rodriguez",
@@ -112,7 +112,7 @@ async function seedUsers() {
     },
     {
       firstName: "Luis Fernando",
-      lastName: "Lopez",
+      lastName: "López",
       email: "luis.lopez@univalle.edu",
       username: "luis_lopez",
       passwordHash,
@@ -148,9 +148,9 @@ async function seedAcademicData(users) {
   );
 
   const subjects = await Subject.insertMany([
-    { code: "WEB3", name: "Programacion Web III", career: sistemas._id, semester: 6 },
+    { code: "WEB3", name: "Programación Web III", career: sistemas._id, semester: 6 },
     { code: "BD2", name: "Base de Datos II", career: sistemas._id, semester: 5 },
-    { code: "PROG3", name: "Programacion III", career: sistemas._id, semester: 4 },
+    { code: "PROG3", name: "Programación III", career: sistemas._id, semester: 4 },
   ]);
 
   const bySubjectCode = Object.fromEntries(subjects.map((subject) => [subject.code, subject]));
@@ -211,7 +211,7 @@ async function seedRequests(users, academic) {
     requestType: "ausencia_estudiantil",
     mode: "permiso_anticipado",
     reasonType: "academico",
-    reasonDetail: "Participacion en actividad academica institucional.",
+    reasonDetail: "Participacion en actividad académica institucional.",
     status: "pendiente",
     dates: [{ date: dateOnly("2026-06-10"), course: academic.courses["WEB3-G1-2026-1"]._id }],
     courses: [academic.courses["WEB3-G1-2026-1"]._id],
@@ -225,7 +225,7 @@ async function seedRequests(users, academic) {
     requestType: "ausencia_estudiantil",
     mode: "justificacion_posterior",
     reasonType: "salud",
-    reasonDetail: "Consulta medica por emergencia familiar.",
+    reasonDetail: "Consulta médica por emergencia familiar.",
     status: "observado",
     dates: [{ date: dateOnly("2026-06-02"), course: academic.courses["WEB3-G1-2026-1"]._id }],
     courses: [academic.courses["WEB3-G1-2026-1"]._id],
@@ -233,7 +233,7 @@ async function seedRequests(users, academic) {
     currentReviewer: users.director_sistemas._id,
     reviewer: users.director_sistemas._id,
     reviewedAt: new Date("2026-06-03T14:30:00.000Z"),
-    reviewComment: "Adjuntar certificado medico legible.",
+    reviewComment: "Adjuntar certificado médico legible.",
   });
 
   const teacherRequest = await Request.create({
@@ -259,8 +259,8 @@ async function seedRequests(users, academic) {
   await Evidence.create({
     request: justificationRequest._id,
     uploadedBy: users.daniel_escobar._id,
-    fileName: "certificado-medico-demo.pdf",
-    fileUrl: "http://localhost:5000/uploads/evidences/certificado-medico-demo.pdf",
+    fileName: "certificado-médico-demo.pdf",
+    fileUrl: "http://localhost:5000/uploads/evidences/certificado-médico-demo.pdf",
     provider: "demo",
     mimeType: "application/pdf",
     size: 248000,
@@ -307,14 +307,14 @@ async function seedNotificationsAndAudit(users, requests) {
     {
       user: users.director_sistemas._id,
       title: "Nueva solicitud pendiente",
-      message: "Ricardo Nunez del Prado envio un permiso anticipado.",
+      message: "Ricardo Núñez del Prado envio un permiso anticipado.",
       type: "solicitud",
       relatedRequest: requests.studentRequest._id,
     },
     {
       user: users.daniel_escobar._id,
       title: "Solicitud observada",
-      message: "Debe adjuntar certificado medico legible.",
+      message: "Debe adjuntar certificado médico legible.",
       type: "revision",
       relatedRequest: requests.justificationRequest._id,
     },
@@ -342,7 +342,7 @@ async function seedNotificationsAndAudit(users, requests) {
       action: "observar_solicitud",
       entityType: "Request",
       entityId: requests.justificationRequest._id,
-      metadata: { status: "observado", comment: "Adjuntar certificado medico legible." },
+      metadata: { status: "observado", comment: "Adjuntar certificado médico legible." },
     },
     {
       actor: users.director_sistemas._id,
@@ -388,3 +388,6 @@ main().catch(async (error) => {
   await mongoose.disconnect();
   process.exit(1);
 });
+
+
+

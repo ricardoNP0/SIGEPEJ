@@ -1,10 +1,22 @@
-import { useContext, useEffect, useMemo, useState } from "react";
+﻿import { useContext, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, BookOpen, Calendar, CheckCircle2, RefreshCw, Save } from "lucide-react";
 import { AuthContext } from "../../context/AuthContext.jsx";
 import { apiClient } from "../../api/client.js";
 
 function getCourseValue(course) {
   return course.id || course._id || course.code;
+}
+
+const DAY_BY_INDEX = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function dateMatchesSchedule(dateValue, course) {
+  if (!dateValue || !course?.schedule?.length) return true;
+  const day = DAY_BY_INDEX[new Date(`${dateValue}T00:00:00`).getDay()];
+  return course.schedule.some((item) => item.day === day);
 }
 
 export default function AttendancePage() {
@@ -42,6 +54,19 @@ export default function AttendancePage() {
 
   async function loadAttendance() {
     if (!selectedCourse || !date) return;
+    const course = courses.find((item) => getCourseValue(item) === selectedCourse);
+    const selectedDate = new Date(`${date}T00:00:00`);
+    const today = new Date(`${todayISO()}T00:00:00`);
+    if (selectedDate > today) {
+      setAttendance(null);
+      setError("No se puede registrar asistencia para una fecha futura.");
+      return;
+    }
+    if (!dateMatchesSchedule(date, course)) {
+      setAttendance(null);
+      setError("La fecha seleccionada no corresponde al horario registrado de la materia/paralelo.");
+      return;
+    }
     setLoadingAttendance(true);
     setError("");
     try {
@@ -65,6 +90,35 @@ export default function AttendancePage() {
   );
 
   async function updateRecord(record, status) {
+    if (user?.role === "director") {
+      const justification = window.prompt("Justificación obligatoria para modificar asistencia como Dirección:");
+      if (!justification || justification.trim().length < 10) {
+        setError("Dirección debe registrar una justificación de al menos 10 caracteres.");
+        return;
+      }
+
+      setSubmitting(true);
+      setMessage("");
+      setError("");
+      try {
+        await apiClient.updateAttendanceByDirector(record.recordId, status, justification.trim());
+        setAttendance((current) => ({
+          ...current,
+          records: current.records.map((item) =>
+            item.recordId === record.recordId
+              ? { ...item, status, lockedByRequest: status === "L", note: `MODIFICADO POR DIRECCIÓN: ${justification.trim()}` }
+              : item
+          ),
+        }));
+        setMessage("Asistencia modificada por Dirección.");
+      } catch (err) {
+        setError(err.message || "No se pudo modificar la asistencia.");
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
     if (record.lockedByRequest) {
       setError("No se puede modificar una licencia L aplicada por solicitud aprobada.");
       return;
@@ -114,7 +168,7 @@ export default function AttendancePage() {
         <span className="eyebrow">Docente</span>
         <h1>Registro de asistencia</h1>
         <p>
-          Selecciona materia, paralelo y fecha. El docente puede marcar P/F; las licencias L aplicadas por Direccion quedan bloqueadas.
+          Selecciona materia, paralelo y fecha. El docente puede marcar P/F; las licencias L aplicadas por Dirección quedan bloqueadas.
         </p>
       </div>
 
@@ -163,6 +217,7 @@ export default function AttendancePage() {
               type="date"
               value={date}
               onChange={(event) => setDate(event.target.value)}
+              max={todayISO()}
               disabled={submitting}
             />
           </label>
@@ -199,7 +254,7 @@ export default function AttendancePage() {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>Codigo</th>
+                  <th>Código</th>
                   <th>Estudiante</th>
                   <th>Estado</th>
                   <th>Control</th>
@@ -220,14 +275,14 @@ export default function AttendancePage() {
                       <span className={`attendance-pill ${record.status}`}>
                         {record.status}
                       </span>
-                      {record.lockedByRequest && <small className="muted-block">Bloqueado por Direccion</small>}
+                      {record.lockedByRequest && <small className="muted-block">Bloqueado por Dirección</small>}
                     </td>
                     <td>
                       <div className="attendance-actions">
                         <button
                           className={`attendance-button ${record.status === "P" ? "active present" : ""}`}
                           type="button"
-                          disabled={record.lockedByRequest || submitting}
+                          disabled={(record.lockedByRequest && user?.role !== "director") || submitting}
                           onClick={() => updateRecord(record, "P")}
                         >
                           P
@@ -235,7 +290,7 @@ export default function AttendancePage() {
                         <button
                           className={`attendance-button ${record.status === "F" ? "active absent" : ""}`}
                           type="button"
-                          disabled={record.lockedByRequest || submitting}
+                          disabled={(record.lockedByRequest && user?.role !== "director") || submitting}
                           onClick={() => updateRecord(record, "F")}
                         >
                           F
@@ -243,8 +298,9 @@ export default function AttendancePage() {
                         <button
                           className={`attendance-button ${record.status === "L" ? "active leave" : ""}`}
                           type="button"
-                          disabled
-                          title="La L solo se aplica por aprobacion de Direccion"
+                          disabled={user?.role !== "director" || submitting}
+                          onClick={() => updateRecord(record, "L")}
+                          title={user?.role === "director" ? "Dirección puede aplicar L con justificación" : "La L solo se aplica por aprobación de Dirección"}
                         >
                           L
                         </button>
@@ -260,3 +316,5 @@ export default function AttendancePage() {
     </section>
   );
 }
+
+

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
 import { Attendance } from "../models/Attendance.js";
 import { AuditLog } from "../models/AuditLog.js";
 import { Course } from "../models/Course.js";
@@ -16,6 +16,25 @@ function getStartAndEndOfDay(date) {
   const end = new Date(base);
   end.setUTCHours(23, 59, 59, 999);
   return { start, end };
+}
+
+const DAY_BY_INDEX = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+
+function toLocalDate(value) {
+  const parsed = typeof value === "string" ? new Date(`${value.slice(0, 10)}T00:00:00`) : new Date(value);
+  parsed.setHours(0, 0, 0, 0);
+  return parsed;
+}
+
+function isFutureDate(value) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return toLocalDate(value) > today;
+}
+
+function dateMatchesCourseSchedule(date, course) {
+  const day = DAY_BY_INDEX[toLocalDate(date).getDay()];
+  return (course.schedule || []).some((item) => item.day === day);
 }
 
 async function getOrCreateAttendance(courseId, date, userId) {
@@ -60,13 +79,27 @@ export const getAttendanceByCourseAndDate = async (req, res) => {
     if (!courseId || !date) {
       return res.status(400).json({
         success: false,
-        message: "Se requieren courseId y date como parametros de consulta",
+        message: "Se requieren courseId y date como parámetros de consulta",
       });
     }
 
     const course = await Course.findById(courseId).populate("subject", "name code");
     if (!course) {
       return res.status(404).json({ success: false, message: "Curso no encontrado" });
+    }
+
+    if (isFutureDate(date)) {
+      return res.status(400).json({
+        success: false,
+        message: "No se puede registrar asistencia para una fecha futura",
+      });
+    }
+
+    if (!dateMatchesCourseSchedule(date, course)) {
+      return res.status(400).json({
+        success: false,
+        message: "No existe horario registrado para este curso en la fecha seleccionada",
+      });
     }
 
     if (!canManageCourse(req.user, course)) {
@@ -157,7 +190,7 @@ export const updateAttendance = async (req, res) => {
       await session.abortTransaction();
       return res.status(403).json({
         success: false,
-        message: "No se puede modificar una licencia aprobada. Solo Direccion puede hacerlo con justificacion.",
+        message: "No se puede modificar una licencia aprobada. Solo Dirección puede hacerlo con justificación.",
       });
     }
 
@@ -233,7 +266,7 @@ export const unlockAttendanceByDirector = async (req, res) => {
       await session.abortTransaction();
       return res.status(400).json({
         success: false,
-        message: "Se requiere una justificacion de al menos 10 caracteres",
+        message: "Se requiere una justificación de al menos 10 caracteres",
       });
     }
 
@@ -281,7 +314,7 @@ export const unlockAttendanceByDirector = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Asistencia modificada por Direccion",
+      message: "Asistencia modificada por Dirección",
       data: {
         recordId: record._id,
         status: record.status,
@@ -300,3 +333,5 @@ export const unlockAttendanceByDirector = async (req, res) => {
     session.endSession();
   }
 };
+
+

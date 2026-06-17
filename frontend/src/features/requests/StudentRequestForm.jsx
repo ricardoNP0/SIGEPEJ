@@ -1,8 +1,20 @@
-import { useState, useEffect, useContext } from "react";
+﻿import { useState, useEffect, useContext } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext.jsx";
 import { apiClient } from "../../api/client.js";
 import { AlertTriangle, FileText, Upload, CheckCircle2, ArrowLeft } from "lucide-react";
+
+const DAY_BY_INDEX = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function dateMatchesSchedule(dateValue, course) {
+  if (!dateValue || !course?.schedule?.length) return true;
+  const day = DAY_BY_INDEX[new Date(`${dateValue}T00:00:00`).getDay()];
+  return course.schedule.some((item) => item.day === day);
+}
 
 export default function StudentRequestForm() {
   const { user } = useContext(AuthContext);
@@ -96,6 +108,23 @@ export default function StudentRequestForm() {
     }
     if (!reasonDetail.trim()) {
       setErrorMsg("Debe ingresar el detalle del motivo de su ausencia.");
+      return;
+    }
+
+    const selectedDate = new Date(`${date}T00:00:00`);
+    const today = new Date(`${todayISO()}T00:00:00`);
+    if (mode === "permiso_anticipado" && selectedDate < today) {
+      setErrorMsg("Un permiso anticipado no puede solicitarse para una fecha pasada.");
+      return;
+    }
+    if (mode === "justificacion_posterior" && selectedDate >= today) {
+      setErrorMsg("Una justificación posterior solo puede registrarse para una fecha ya ocurrida.");
+      return;
+    }
+
+    const selectedCourseInfo = courses.find((course) => course.code === selectedCourse);
+    if (!dateMatchesSchedule(date, selectedCourseInfo)) {
+      setErrorMsg("La fecha seleccionada no corresponde al horario registrado de esa materia/paralelo.");
       return;
     }
 
@@ -258,6 +287,8 @@ export default function StudentRequestForm() {
                 className="form-input"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+                min={mode === "permiso_anticipado" ? todayISO() : undefined}
+                max={mode === "justificacion_posterior" ? todayISO() : undefined}
                 disabled={submitting || !!editId}
               />
             </div>
@@ -339,3 +370,6 @@ export default function StudentRequestForm() {
     </section>
   );
 }
+
+
+

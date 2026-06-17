@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+﻿const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const API_ORIGIN = API_URL.replace(/\/api\/?$/, "");
 
 // Seed Users from seed.js
@@ -24,7 +24,7 @@ const MOCK_USERS = [
     email: "secretaria.sistemas@univalle.edu",
     role: "secretario",
     firstName: "Secretaria",
-    lastName: "Academica",
+    lastName: "Académica",
     code: "SEC-SIS-001"
   },
   {
@@ -48,7 +48,7 @@ const MOCK_USERS = [
     email: "ricardo.nunez@univalle.edu",
     role: "estudiante",
     firstName: "Ricardo",
-    lastName: "Nunez del Prado",
+    lastName: "Núñez del Prado",
     code: "EST-2026-001"
   },
   {
@@ -63,7 +63,7 @@ const MOCK_USERS = [
     username: "josue_rodriguez",
     email: "josue.rodriguez@univalle.edu",
     role: "estudiante",
-    firstName: "Josue",
+    firstName: "Josué",
     lastName: "Rodriguez Vera",
     code: "EST-2026-003"
   },
@@ -72,7 +72,7 @@ const MOCK_USERS = [
     email: "luis.lopez@univalle.edu",
     role: "estudiante",
     firstName: "Luis Fernando",
-    lastName: "Lopez",
+    lastName: "López",
     code: "EST-2026-004"
   }
 ];
@@ -82,7 +82,7 @@ const MOCK_COURSES = [
   {
     id: "course-web3",
     code: "WEB3-G1-2026-1",
-    subjectName: "Programacion Web III",
+    subjectName: "Programación Web III",
     subjectCode: "WEB3",
     parallel: "G1",
     teacherName: "Ana Rojas",
@@ -100,7 +100,7 @@ const MOCK_COURSES = [
   {
     id: "course-prog3",
     code: "PROG3-G2-2026-1",
-    subjectName: "Programacion III",
+    subjectName: "Programación III",
     subjectCode: "PROG3",
     parallel: "G2",
     teacherName: "Ana Rojas",
@@ -114,14 +114,14 @@ const INITIAL_MOCK_REQUESTS = [
     id: "req-001",
     code: "SOL-2026-001",
     requesterUsername: "ricardo_np",
-    requesterName: "Ricardo Nunez del Prado",
+    requesterName: "Ricardo Núñez del Prado",
     requesterRole: "estudiante",
     requestType: "ausencia_estudiantil",
     mode: "permiso_anticipado",
     reasonType: "academico",
-    reasonDetail: "Participacion en actividad academica institucional.",
+    reasonDetail: "Participacion en actividad académica institucional.",
     status: "pendiente",
-    dates: [{ date: "2026-06-10", courseCode: "WEB3-G1-2026-1", courseName: "Programacion Web III" }],
+    dates: [{ date: "2026-06-10", courseCode: "WEB3-G1-2026-1", courseName: "Programación Web III" }],
     courses: ["WEB3-G1-2026-1"],
     evidenceRequired: false,
     reviewComment: "",
@@ -136,14 +136,14 @@ const INITIAL_MOCK_REQUESTS = [
     requestType: "ausencia_estudiantil",
     mode: "justificacion_posterior",
     reasonType: "salud",
-    reasonDetail: "Consulta medica por emergencia familiar.",
+    reasonDetail: "Consulta médica por emergencia familiar.",
     status: "observada",
-    dates: [{ date: "2026-06-02", courseCode: "WEB3-G1-2026-1", courseName: "Programacion Web III" }],
+    dates: [{ date: "2026-06-02", courseCode: "WEB3-G1-2026-1", courseName: "Programación Web III" }],
     courses: ["WEB3-G1-2026-1"],
     evidenceRequired: true,
-    reviewComment: "Adjuntar certificado medico legible.",
-    evidenceUrl: "http://localhost:5000/uploads/evidences/certificado-medico-demo.pdf",
-    evidenceName: "certificado-medico-demo.pdf"
+    reviewComment: "Adjuntar certificado médico legible.",
+    evidenceUrl: "http://localhost:5000/uploads/evidences/certificado-médico-demo.pdf",
+    evidenceName: "certificado-médico-demo.pdf"
   },
   {
     id: "req-003",
@@ -157,8 +157,8 @@ const INITIAL_MOCK_REQUESTS = [
     reasonDetail: "Capacitacion docente programada por la universidad.",
     status: "aprobada",
     dates: [
-      { date: "2026-06-12", courseCode: "WEB3-G1-2026-1", courseName: "Programacion Web III" },
-      { date: "2026-06-12", courseCode: "PROG3-G2-2026-1", courseName: "Programacion III" }
+      { date: "2026-06-12", courseCode: "WEB3-G1-2026-1", courseName: "Programación Web III" },
+      { date: "2026-06-12", courseCode: "PROG3-G2-2026-1", courseName: "Programación III" }
     ],
     courses: ["WEB3-G1-2026-1", "PROG3-G2-2026-1"],
     evidenceRequired: false,
@@ -205,9 +205,9 @@ const INITIAL_MOCK_CAREERS = [
 ];
 
 const INITIAL_MOCK_SUBJECTS = [
-  { _id: "sub-web3", code: "WEB3", name: "Programacion Web III", career: INITIAL_MOCK_CAREERS[0], semester: 6, isActive: true },
+  { _id: "sub-web3", code: "WEB3", name: "Programación Web III", career: INITIAL_MOCK_CAREERS[0], semester: 6, isActive: true },
   { _id: "sub-bd2", code: "BD2", name: "Base de Datos II", career: INITIAL_MOCK_CAREERS[0], semester: 5, isActive: true },
-  { _id: "sub-prog3", code: "PROG3", name: "Programacion III", career: INITIAL_MOCK_CAREERS[0], semester: 4, isActive: true }
+  { _id: "sub-prog3", code: "PROG3", name: "Programación III", career: INITIAL_MOCK_CAREERS[0], semester: 4, isActive: true }
 ];
 
 const INITIAL_MOCK_COURSES_EXPANDED = MOCK_COURSES.map((course) => ({
@@ -233,7 +233,7 @@ const INITIAL_MOCK_COURSES_EXPANDED = MOCK_COURSES.map((course) => ({
 const INITIAL_MOCK_AUDIT = [
   {
     _id: "audit-001",
-    actor: { firstName: "Ricardo", lastName: "Nunez del Prado", role: "estudiante", code: "EST-2026-001", username: "ricardo_np" },
+    actor: { firstName: "Ricardo", lastName: "Núñez del Prado", role: "estudiante", code: "EST-2026-001", username: "ricardo_np" },
     action: "crear_solicitud",
     entityType: "Request",
     entityId: "req-001",
@@ -246,7 +246,7 @@ const INITIAL_MOCK_AUDIT = [
     action: "observado_solicitud",
     entityType: "Request",
     entityId: "req-002",
-    metadata: { status: "observado", comment: "Adjuntar certificado medico legible." },
+    metadata: { status: "observado", comment: "Adjuntar certificado médico legible." },
     createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString()
   }
 ];
@@ -469,7 +469,7 @@ function saveMockAttendanceRecord(recordId, status, note = "") {
     const record = attendance.records.find((item) => item.recordId === recordId);
     if (!record) continue;
     if (record.lockedByRequest) {
-      throw new Error("No se puede modificar una licencia bloqueada por Direccion.");
+      throw new Error("No se puede modificar una licencia bloqueada por Dirección.");
     }
     record.status = status;
     record.note = note;
@@ -513,7 +513,7 @@ export const apiClient = {
       }
 
       const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.message || "Error al iniciar sesion");
+      throw new Error(errData.message || "Error al iniciar sesión");
     } catch (error) {
       console.warn("Backend login failed or unavailable, falling back to mock database:", error.message);
 
@@ -539,7 +539,7 @@ export const apiClient = {
         };
       }
 
-      throw new Error("Credenciales incorrectas. Verifique su usuario y contrasena.");
+      throw new Error("Credenciales incorrectas. Verifique su usuario y contraseña.");
     }
   },
 
@@ -784,7 +784,7 @@ export const apiClient = {
         readAt: new Date().toISOString()
       }));
       saveMockNotifications(notifications);
-      return { message: "Notificaciones marcadas como leidas" };
+      return { message: "Notificaciónes marcadas como leidas" };
     }
   },
 
@@ -815,7 +815,7 @@ export const apiClient = {
     } catch (error) {
       console.warn("Backend deleteNotification failed, using mock data:", error.message);
       saveMockNotifications(getMockNotifications().filter((item) => item._id !== notificationId));
-      return { message: "Notificacion eliminada" };
+      return { message: "Notificación eliminada" };
     }
   },
 
@@ -930,7 +930,7 @@ export const apiClient = {
       console.warn("Backend createCareer failed, using mock data:", error.message);
       const careers = getMockCareers();
       if (careers.find((career) => career.code === careerData.code.toUpperCase())) {
-        throw new Error("Ya existe una carrera con ese codigo");
+        throw new Error("Ya existe una carrera con ese código");
       }
       const newCareer = {
         _id: `career-${Date.now()}`,
@@ -973,7 +973,7 @@ export const apiClient = {
       console.warn("Backend createSubject failed, using mock data:", error.message);
       const subjects = getMockSubjects();
       if (subjects.find((subject) => subject.code === subjectData.code.toUpperCase())) {
-        throw new Error("Ya existe una materia con ese codigo");
+        throw new Error("Ya existe una materia con ese código");
       }
       const career = getMockCareers().find((item) => item._id === subjectData.career || item.code === subjectData.career);
       const newSubject = {
@@ -1018,7 +1018,7 @@ export const apiClient = {
       console.warn("Backend createCourse failed, using mock data:", error.message);
       const courses = getMockCourses();
       if (courses.find((course) => course.code === courseData.code.toUpperCase())) {
-        throw new Error("Ya existe un curso/paralelo con ese codigo");
+        throw new Error("Ya existe un curso/paralelo con ese código");
       }
       const newCourse = {
         _id: `course-${Date.now()}`,
@@ -1051,9 +1051,14 @@ export const apiClient = {
     }
   },
 
-  async getReportStats() {
+  async getReportStats(filters = {}) {
     try {
-      const response = await fetch(`${API_URL}/reports/stats`, {
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.set(key, value);
+      });
+      const query = params.toString() ? `?${params.toString()}` : "";
+      const response = await fetch(`${API_URL}/reports/stats${query}`, {
         headers: getHeaders()
       });
       if (response.ok) return await response.json();
@@ -1077,7 +1082,7 @@ export const apiClient = {
         },
         requestsByReason: [
           { name: "Salud", value: countReason("salud") },
-          { name: "Academico", value: countReason("academico") },
+          { name: "Académico", value: countReason("academico") },
           { name: "Personal", value: countReason("personal") },
           { name: "Otros", value: countReason("otro") }
         ]
@@ -1167,5 +1172,19 @@ export const apiClient = {
       console.warn("Backend updateAttendance failed, updating mock data:", error.message);
       return saveMockAttendanceRecord(recordId, status, note);
     }
+  },
+
+  async updateAttendanceByDirector(recordId, newStatus, justification) {
+    const response = await fetch(`${API_URL}/attendance/unlock/${recordId}`, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify({ newStatus, justification })
+    });
+    if (response.ok) return await response.json();
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || "No se pudo modificar la licencia por Dirección");
   }
 };
+
+
+

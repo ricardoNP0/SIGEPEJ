@@ -1,8 +1,20 @@
-import { useState, useEffect, useContext } from "react";
+﻿import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext.jsx";
 import { apiClient } from "../../api/client.js";
 import { Plus, Trash2, CheckCircle2, AlertTriangle, ArrowLeft, Calendar } from "lucide-react";
+
+const DAY_BY_INDEX = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function dateMatchesSchedule(dateValue, course) {
+  if (!dateValue || !course?.schedule?.length) return true;
+  const day = DAY_BY_INDEX[new Date(`${dateValue}T00:00:00`).getDay()];
+  return course.schedule.some((item) => item.day === day);
+}
 
 export default function TeacherRequestForm() {
   const { user } = useContext(AuthContext);
@@ -123,6 +135,19 @@ export default function TeacherRequestForm() {
       }
       if (!row.courseCode) {
         setErrorMsg(`Seleccione una materia para la fecha en la fila #${i + 1}.`);
+        return;
+      }
+
+      const selectedDate = new Date(`${row.date}T00:00:00`);
+      const today = new Date(`${todayISO()}T00:00:00`);
+      if (selectedDate < today) {
+        setErrorMsg(`La fila #${i + 1} no es válida: una solicitud docente debe ser anticipada.`);
+        return;
+      }
+
+      const course = myCourses.find((item) => item.code === row.courseCode);
+      if (!dateMatchesSchedule(row.date, course)) {
+        setErrorMsg(`La fila #${i + 1} no corresponde al horario registrado de ${course?.code || "la materia"}.`);
         return;
       }
     }
@@ -280,6 +305,7 @@ export default function TeacherRequestForm() {
                       style={{ padding: "6px 10px" }}
                       value={row.date}
                       onChange={(e) => updateDateRow(index, "date", e.target.value)}
+                      min={todayISO()}
                       disabled={submitting}
                     />
                   </div>
@@ -353,3 +379,5 @@ export default function TeacherRequestForm() {
     </section>
   );
 }
+
+

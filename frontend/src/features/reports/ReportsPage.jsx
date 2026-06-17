@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { apiClient } from "../../api/client.js";
 import {
   AlertCircle,
@@ -33,12 +33,12 @@ export default function ReportsPage() {
   const [subjects, setSubjects] = useState([]);
   const [careers, setCareers] = useState([]);
 
-  async function loadData() {
+  async function loadData(activeFilters = filters) {
     setLoading(true);
     setError("");
     try {
       const [statsData, subjectsData, careersData] = await Promise.all([
-        apiClient.getReportStats(),
+        apiClient.getReportStats(activeFilters),
         apiClient.getSubjects(),
         apiClient.getCareers()
       ]);
@@ -57,20 +57,11 @@ export default function ReportsPage() {
     loadData();
   }, []);
 
-  const handleApplyFilters = (e) => {
+  const handleApplyFilters = async (e) => {
     e.preventDefault();
-    setSuccess("Filtros aplicados con éxito. Indicadores recalculados.");
+    await loadData(filters);
+    setSuccess("Filtros aplicados con éxito. Indicadores recalculados con datos reales.");
     setTimeout(() => setSuccess(""), 4000);
-    // In mock, we slightly shuffle some numbers to make it interactive
-    if (stats) {
-      setStats(prev => ({
-        ...prev,
-        summary: {
-          ...prev.summary,
-          pendingRequests: Math.max(0, prev.summary.pendingRequests + (Math.random() > 0.5 ? 1 : -1))
-        }
-      }));
-    }
   };
 
   const handleExportCSV = () => {
@@ -324,3 +315,6 @@ export default function ReportsPage() {
     </section>
   );
 }
+
+
+

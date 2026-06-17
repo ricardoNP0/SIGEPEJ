@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, CheckCircle2, Eye, RefreshCw, Search, X } from "lucide-react";
+﻿import { useEffect, useMemo, useState } from "react";
+import { AlertCircle, CheckCircle2, ExternalLink, Eye, RefreshCw, Search, X } from "lucide-react";
 import { apiClient } from "../../api/client.js";
 
 const filters = [
@@ -26,7 +26,13 @@ function statusClass(status) {
 
 function formatDate(value) {
   if (!value) return "-";
-  return String(value).slice(0, 10);
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value).slice(0, 10);
+  return parsed.toLocaleDateString("es-BO", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
 }
 
 export default function RevisionPage() {
@@ -49,7 +55,7 @@ export default function RevisionPage() {
       const data = await apiClient.getAllRequests(statusFilter);
       setRequests(data);
     } catch (err) {
-      setError(err.message || "No se pudo cargar la bandeja de revision.");
+      setError(err.message || "No se pudo cargar la bandeja de revisión.");
     } finally {
       setLoading(false);
     }
@@ -114,8 +120,8 @@ export default function RevisionPage() {
   return (
     <section className="content-stack">
       <div className="page-heading">
-        <span className="eyebrow">Direccion / Secretaria</span>
-        <h1>Bandeja de revision</h1>
+        <span className="eyebrow">Dirección / Secretaria</span>
+        <h1>Bandeja de revisión</h1>
         <p>
           Revisa solicitudes pendientes, observadas y apeladas. Al aprobar, el sistema aplica el impacto automatico en asistencia.
         </p>
@@ -174,12 +180,13 @@ export default function RevisionPage() {
             <table className="custom-table">
               <thead>
                 <tr>
-                  <th>Codigo</th>
+                  <th>Código</th>
                   <th>Solicitante</th>
                   <th>Tipo</th>
                   <th>Fechas / Materias</th>
+                  <th>Evidencia</th>
                   <th>Estado</th>
-                  <th>Acciones</th>
+                  <th>Acciónes</th>
                 </tr>
               </thead>
               <tbody>
@@ -205,6 +212,16 @@ export default function RevisionPage() {
                           </span>
                         ))}
                       </div>
+                    </td>
+                    <td>
+                      {request.evidenceUrl ? (
+                        <a className="evidence-link" href={request.evidenceUrl} target="_blank" rel="noreferrer">
+                          Ver evidencia
+                          <ExternalLink size={12} />
+                        </a>
+                      ) : (
+                        <span className="muted-block">Sin evidencia</span>
+                      )}
                     </td>
                     <td>
                       <span className={`status-pill ${statusClass(request.status)}`}>
@@ -246,20 +263,41 @@ export default function RevisionPage() {
             <button className="modal-close" type="button" onClick={() => setSelectedRequest(null)}>
               <X size={18} />
             </button>
-            <h2 className="modal-title">Detalle {selectedRequest.code}</h2>
+            <h2 className="modal-title">Detalle de solicitud {selectedRequest.code}</h2>
             <div className="detail-grid">
               <span>Solicitante</span>
               <strong>{selectedRequest.requesterName}</strong>
+              <span>Rol</span>
+              <strong>{selectedRequest.requesterRole}</strong>
               <span>Estado</span>
               <strong>{selectedRequest.status}</strong>
+              <span>Trámite</span>
+              <strong>{selectedRequest.mode?.replaceAll("_", " ")}</strong>
               <span>Motivo</span>
               <strong>{selectedRequest.reasonType}</strong>
+              <span>Fechas y materias</span>
+              <div className="date-list">
+                {(selectedRequest.dates || []).map((item, index) => (
+                  <span key={`${getRequestId(selectedRequest)}-detail-${index}`}>
+                    {formatDate(item.date)} - {item.courseName || item.courseCode || "Materia"}
+                  </span>
+                ))}
+              </div>
+              <span>Evidencia</span>
+              {selectedRequest.evidenceUrl ? (
+                <a className="evidence-link" href={selectedRequest.evidenceUrl} target="_blank" rel="noreferrer">
+                  {selectedRequest.evidenceName || "Ver archivo adjunto"}
+                  <ExternalLink size={13} />
+                </a>
+              ) : (
+                <p>Sin evidencia adjunta</p>
+              )}
               <span>Detalle</span>
               <p>{selectedRequest.reasonDetail}</p>
-              <span>Comentario revision</span>
+              <span>Comentario de revisión</span>
               <p>{selectedRequest.reviewComment || "Sin comentario"}</p>
-              <span>Apelacion</span>
-              <p>{selectedRequest.appealComment || "Sin apelacion"}</p>
+              <span>Apelación</span>
+              <p>{selectedRequest.appealComment || "Sin apelación"}</p>
             </div>
           </div>
         </div>
@@ -273,10 +311,10 @@ export default function RevisionPage() {
             </button>
             <h2 className="modal-title">Revisar {actionRequest.code}</h2>
             <p className="panel-copy">
-              Accion seleccionada: <strong>{actionStatus}</strong>. Para observar o rechazar, el comentario queda como evidencia de auditoria.
+              Acción seleccionada: <strong>{actionStatus}</strong>. Para observar o rechazar, el comentario queda como evidencia de auditoría.
             </p>
             <label className="form-group">
-              <span className="form-label">Comentario de revision</span>
+              <span className="form-label">Comentario de revisión</span>
               <textarea
                 className="form-textarea"
                 value={reviewComment}
@@ -298,3 +336,5 @@ export default function RevisionPage() {
     </section>
   );
 }
+
+

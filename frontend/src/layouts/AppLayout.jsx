@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useContext } from "react";
+﻿import { useEffect, useMemo, useState, useContext } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3,
@@ -11,7 +11,6 @@ import {
   Gauge,
   LogOut,
   Menu,
-  Search,
   ShieldCheck,
   UserCog,
   UsersRound,
@@ -68,7 +67,8 @@ export function AppLayout() {
     }
 
     const isDashboard = location.pathname === "/dashboard";
-    const allowed = menuItems.some((item) => item.path === location.pathname);
+    const alwaysAllowed = ["/dashboard", "/notificaciones"];
+    const allowed = menuItems.some((item) => item.path === location.pathname) || alwaysAllowed.includes(location.pathname);
 
     if (!allowed && !isDashboard) {
       if (menuItems.length > 0) {
@@ -137,7 +137,7 @@ export function AppLayout() {
           </div>
           <NavLink className="logout-link" to="/login" onClick={logout}>
             <LogOut size={18} aria-hidden="true" />
-            Cerrar sesion
+            Cerrar sesión
           </NavLink>
         </div>
       </aside>
@@ -159,10 +159,6 @@ export function AppLayout() {
           </div>
 
           <div className="topbar-actions">
-            <label className="search-box">
-              <Search size={18} aria-hidden="true" />
-              <input type="search" placeholder="Buscar solicitud, materia o usuario" />
-            </label>
             <button
               className="icon-button"
               type="button"
@@ -182,3 +178,5 @@ export function AppLayout() {
     </div>
   );
 }
+
+

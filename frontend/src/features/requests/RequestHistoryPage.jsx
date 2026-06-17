@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+﻿import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext.jsx";
 import { apiClient } from "../../api/client.js";
@@ -93,6 +93,17 @@ export default function RequestHistoryPage() {
     return "";
   };
 
+  const formatDate = (value) => {
+    if (!value) return "Sin fecha";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "Sin fecha";
+    return parsed.toLocaleDateString("es-BO", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    });
+  };
+
   return (
     <section className="content-stack">
       <div className="page-heading">
@@ -155,7 +166,7 @@ export default function RequestHistoryPage() {
                   <th>Motivo</th>
                   <th>Estado</th>
                   <th>Evidencia</th>
-                  <th style={{ textAlign: "right" }}>Acciones</th>
+                  <th style={{ textAlign: "right" }}>Acciónes</th>
                 </tr>
               </thead>
               <tbody>
@@ -168,18 +179,14 @@ export default function RequestHistoryPage() {
                       </span>
                     </td>
                     <td>
-                      {new Date(parseInt(req.id.replace("req-", "")) || Date.now()).toLocaleDateString("es-ES", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit"
-                      })}
+                      {formatDate(req.createdAt)}
                     </td>
                     <td>
                       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                         {req.dates && req.dates.map((d, i) => (
                           <div key={i} style={{ fontSize: "13px" }}>
                             <span style={{ fontWeight: "600" }}>{d.courseName}</span>
-                            <span style={{ color: "var(--ink-500)", marginLeft: "6px" }}>({d.date})</span>
+                            <span style={{ color: "var(--ink-500)", marginLeft: "6px" }}>({formatDate(d.date)})</span>
                           </div>
                         ))}
                       </div>
@@ -321,7 +328,7 @@ export default function RequestHistoryPage() {
                       <Calendar size={14} style={{ color: "var(--ink-500)" }} />
                       <div>
                         <strong>{d.courseName}</strong>
-                        <div style={{ fontSize: "12px", color: "var(--ink-500)" }}>Código: {d.courseCode} | Fecha: {d.date}</div>
+                        <div style={{ fontSize: "12px", color: "var(--ink-500)" }}>Código: {d.courseCode} | Fecha: {formatDate(d.date)}</div>
                       </div>
                     </div>
                   ))}
@@ -360,7 +367,7 @@ export default function RequestHistoryPage() {
                       rel="noreferrer" 
                       className="evidence-link"
                     >
-                      {selectedRequest.evidenceName || "certificado-medico.pdf"}
+                      {selectedRequest.evidenceName || "certificado-médico.pdf"}
                       <ExternalLink size={14} />
                     </a>
                   </div>
@@ -458,3 +465,5 @@ export default function RequestHistoryPage() {
     </section>
   );
 }
+
+

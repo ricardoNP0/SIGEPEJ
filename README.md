@@ -1,4 +1,4 @@
-# SIGEPEJ
+﻿# SIGEPEJ
 
 Sistema de Gestion de Solicitudes de Ausencia Estudiantil y Docente.
 
@@ -200,7 +200,7 @@ cd backend
 npm run seed
 ```
 
-Este comando limpia y vuelve a cargar los datos demo de `SIGEPEJ`. Usarlo solo en la base academica de prueba.
+Este comando limpia y vuelve a cargar los datos demo de `SIGEPEJ`. Usarlo solo en la base académica de prueba.
 
 Modelos ya creados en `backend/src/models/`:
 
@@ -252,33 +252,33 @@ Para que cualquier integrante pueda conectarse desde su laptop, en MongoDB Atlas
 0.0.0.0/0
 ```
 
-Esto es solo para demo academica. Despues de la entrega se debe cambiar la contrasena o eliminar el usuario demo.
+Esto es solo para demo académica. Despues de la entrega se debe cambiar la contraseña o eliminar el usuario demo.
 
 ## Estado final del repositorio
 
-La aplicacion final ya esta integrada para demo academica:
+La aplicacion final ya esta integrada para demo académica:
 
 - `backend/`: Express, MongoDB Atlas, variables de entorno, modelos, seed y endpoint de prueba.
 - `frontend/`: React + Vite, login, layout por roles y pantallas funcionales.
 - `docs/`: documentacion inicial y tarjetas sugeridas para Trello.
 - `preview/`: mockup HTML estatico y capturas.
 
-El proyecto permite gestionar solicitudes de ausencia para estudiantes y docentes, revision por Direccion, evidencias, asistencia `P/F/L`, notificaciones, auditoria y reportes.
+El proyecto permite gestionar solicitudes de ausencia para estudiantes y docentes, revisión por Dirección, evidencias, asistencia `P/F/L`, notificaciones, auditoría y reportes.
 
-Los modulos reales de login, solicitudes, asistencia, auditoria, notificaciones, usuarios, catalogos y reportes ya estan integrados en la app final.
+Los modulos reales de login, solicitudes, asistencia, auditoría, notificaciones, usuarios, catálogos y reportes ya estan integrados en la app final.
 
 ## Validacion final ejecutada
 
 Se verifico:
 
-- Conexion exitosa a MongoDB Atlas con `npm run check:db`.
-- Seed completo con 9 usuarios, 1 carrera, 3 materias, 3 cursos, 12 inscripciones, solicitudes, evidencias, asistencias, notificaciones y auditoria.
+- Conexion éxitosa a MongoDB Atlas con `npm run check:db`.
+- Seed completo con 9 usuarios, 1 carrera, 3 materias, 3 cursos, 12 inscripciones, solicitudes, evidencias, asistencias, notificaciones y auditoría.
 - Build del frontend con `npm run build`.
 - Login real contra backend.
 - Proteccion de rutas de solicitudes: sin token responde 401.
-- Revision de solicitud por Direccion.
-- Impacto automatico de aprobacion estudiantil: asistencia marcada como `L` y bloqueada.
-- Consulta de reportes, auditoria, usuarios, notificaciones, cursos y asistencia.
+- Revisión de solicitud por Dirección.
+- Impacto automatico de aprobación estudiantil: asistencia marcada como `L` y bloqueada.
+- Consulta de reportes, auditoría, usuarios, notificaciones, cursos y asistencia.
 
 ## Mockup visual
 
@@ -303,7 +303,7 @@ Cada tarjeta incluye:
 - Sprint.
 - Responsable por area.
 - Titulo.
-- Descripcion.
+- Descripción.
 - Checklist.
 - Comentario/tutorial para pegar en Trello.
 
@@ -326,7 +326,7 @@ Antes de subir cambios:
 ```bash
 git status
 git add .
-git commit -m "Descripcion del avance"
+git commit -m "Descripción del avance"
 git push origin nombre-rama
 ```
 
@@ -357,7 +357,7 @@ npm run check:db
 
 Si aparece `ENOTFOUND`, el host del cluster esta mal escrito.
 
-Si aparece error de autenticacion, revisar usuario y contrasena en `backend/.env`.
+Si aparece error de autenticacion, revisar usuario y contraseña en `backend/.env`.
 
 Si aparece error de IP, revisar en Atlas:
 
@@ -396,3 +396,5 @@ Frontend usa:
 ```
 
 Si un puerto esta ocupado, cerrar el proceso anterior o cambiar el puerto en la configuracion.
+
+

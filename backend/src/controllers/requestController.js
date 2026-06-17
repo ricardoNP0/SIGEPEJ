@@ -1,7 +1,9 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
 import { ROLES } from "../constants/roles.js";
 import { AuditLog } from "../models/AuditLog.js";
+import { Career } from "../models/Career.js";
 import { Course } from "../models/Course.js";
+import { Enrollment } from "../models/Enrollment.js";
 import { Notification } from "../models/Notification.js";
 import { Request } from "../models/Request.js";
 import { User } from "../models/User.js";
@@ -35,10 +37,94 @@ function inferMode(dates) {
   return hasPastDate ? "justificacion_posterior" : "permiso_anticipado";
 }
 
+const DAY_BY_INDEX = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+
+function getTodayStart() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+}
+
+function toLocalDate(value) {
+  const date = typeof value === "string" ? new Date(`${value.slice(0, 10)}T00:00:00`) : new Date(value);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function validateModeDates(mode, dates) {
+  const today = getTodayStart();
+  const invalidPast = dates.some((item) => toLocalDate(item.date || item) < today);
+  const invalidFuture = dates.some((item) => toLocalDate(item.date || item) >= today);
+
+  if (mode === "permiso_anticipado" && invalidPast) {
+    return "Un permiso anticipado no puede registrarse para fechas pasadas.";
+  }
+
+  if (mode === "justificacion_posterior" && invalidFuture) {
+    return "Una justificación posterior solo puede registrarse para fechas ya ocurridas.";
+  }
+
+  return null;
+}
+
+function dateMatchesSchedule(date, schedule = []) {
+  const day = DAY_BY_INDEX[toLocalDate(date).getDay()];
+  return schedule.some((item) => item.day === day);
+}
+
+async function validateDatesAgainstCourses({ dates, requester, requesterRole }) {
+  for (const item of dates) {
+    const courseValue = item?.course || item?.courseId || item?.courseCode;
+    const course = mongoose.isValidObjectId(courseValue)
+      ? await Course.findById(courseValue)
+      : await Course.findOne({ code: courseValue });
+
+    if (!course) {
+      return `No se encontro la materia/paralelo ${courseValue || "seleccionado"}.`;
+    }
+
+    if (!dateMatchesSchedule(item.date, course.schedule)) {
+      return `La fecha ${String(item.date).slice(0, 10)} no corresponde al horario registrado de ${course.code}.`;
+    }
+
+    if (requesterRole === ROLES.TEACHER && String(course.teacher) !== String(requester._id)) {
+      return `El docente no tiene asignado el paralelo ${course.code}.`;
+    }
+
+    if (requesterRole === ROLES.STUDENT) {
+      const enrollment = await Enrollment.exists({
+        student: requester._id,
+        course: course._id,
+        status: "inscrito",
+      });
+
+      if (!enrollment) {
+        return `El estudiante no esta inscrito en el paralelo ${course.code}.`;
+      }
+    }
+  }
+
+  return null;
+}
+
 async function getRequester(req, requesterRole) {
   if (req.user) return req.user;
 
   return User.findOne({ role: requesterRole }).sort({ createdAt: 1 });
+}
+
+async function getDirectorForRequester(requester) {
+  if (requester?.career) {
+    const career = await Career.findById(requester.career).select("director");
+    if (career?.director) {
+      return User.findById(career.director);
+    }
+
+    const director = await User.findOne({ role: ROLES.DIRECTOR, career: requester.career }).sort({ createdAt: 1 });
+    if (director) return director;
+  }
+
+  return User.findOne({ role: ROLES.DIRECTOR }).sort({ createdAt: 1 });
 }
 
 async function resolveCourseIds(dates, rawCourses) {
@@ -238,6 +324,21 @@ export const createRequest = async (req, res) => {
       });
     }
 
+    const selectedMode = req.body.mode || inferMode(rawDates);
+    const modeError = validateModeDates(selectedMode, rawDates);
+    if (modeError) {
+      return res.status(400).json({ success: false, message: modeError });
+    }
+
+    const scheduleError = await validateDatesAgainstCourses({
+      dates: rawDates,
+      requester,
+      requesterRole,
+    });
+    if (scheduleError) {
+      return res.status(400).json({ success: false, message: scheduleError });
+    }
+
     const rawCourses = parseJsonField(req.body.courseIds, parseJsonField(req.body.courses));
     const courseIds = await resolveCourseIds(rawDates, rawCourses);
     const formattedDates = [];
@@ -258,9 +359,16 @@ export const createRequest = async (req, res) => {
       });
     }
 
-    const director = await User.findOne({ role: ROLES.DIRECTOR });
+    const director = await getDirectorForRequester(requester);
     const evidence = buildEvidence(req.file);
     const reasonType = req.body.reasonType || "otro";
+
+    if (reasonType === "salud" && !evidence) {
+      return res.status(400).json({
+        success: false,
+        message: "Debe adjuntar evidencia para solicitudes por salud.",
+      });
+    }
 
     const request = await Request.create({
       requester: requester._id,
@@ -268,7 +376,7 @@ export const createRequest = async (req, res) => {
       requestType:
         req.body.requestType ||
         (requesterRole === ROLES.TEACHER ? "ausencia_docente" : "ausencia_estudiantil"),
-      mode: req.body.mode || inferMode(rawDates),
+      mode: selectedMode,
       reasonType,
       reasonDetail: req.body.reasonDetail || "Solicitud registrada desde frontend",
       status: "pendiente",
@@ -293,7 +401,7 @@ export const createRequest = async (req, res) => {
       await Notification.create({
         user: director._id,
         title: "Nueva solicitud",
-        message: "Se registro una nueva solicitud pendiente de revision",
+        message: "Se registro una nueva solicitud pendiente de revisión",
         type: "solicitud",
         relatedRequest: request._id,
       });
@@ -652,3 +760,6 @@ export const appealRejectedRequest = async (req, res) => {
     session.endSession();
   }
 };
+
+
+
