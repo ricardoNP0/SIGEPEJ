@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useNavigate, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useContext, useState, useEffect, useMemo } from "react";
 import {
   Activity,
@@ -432,15 +432,29 @@ function PlaceholderPage({ details }) {
   );
 }
 
+function GitHubPagesRedirect() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const stored = sessionStorage.getItem("redirect");
+    if (stored) {
+      sessionStorage.removeItem("redirect");
+      navigate(stored, { replace: true });
+    }
+  }, [navigate]);
+  return <Outlet />;
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <Routes>
-        {/* Pantalla de login */}
-        <Route path="/login" element={<LoginPage />} />
+        {/* SPA redirect handler for GitHub Pages */}
+        <Route element={<GitHubPagesRedirect />}>
+          {/* Pantalla de login */}
+          <Route path="/login" element={<LoginPage />} />
 
-        {/* Rutas protegidas dentro del layout */}
-        <Route element={<AppLayout />}>
+          {/* Rutas protegidas dentro del layout */}
+          <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<DashboardPage />} />
 
@@ -473,6 +487,7 @@ export default function App() {
               element={<PlaceholderPage details={details} />}
             />
           ))}
+        </Route>
         </Route>
 
         {/* Fallback */}
