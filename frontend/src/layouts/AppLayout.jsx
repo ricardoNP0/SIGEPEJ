@@ -17,6 +17,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
+import NotificationBadge from "../components/common/NotificationBadge";
 import { menuByRole } from "../routes/menuConfig.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 
@@ -158,14 +159,24 @@ export function AppLayout() {
             <h1>{currentTitle}</h1>
           </div>
 
-          <div className="topbar-actions">
+            <div className="topbar-actions">
             <label className="search-box">
               <Search size={18} aria-hidden="true" />
               <input type="search" placeholder="Buscar solicitud, materia o usuario" />
             </label>
-            <button className="icon-button" type="button" aria-label="Ver notificaciones">
+            <button
+              className="icon-button"
+              aria-label="Ver notificaciones"
+              onClick={() =>
+                navigate("/notificaciones")
+              }
+              style={{
+                position: "relative"
+              }}
+            >
               <Bell size={20} aria-hidden="true" />
-              <span className="notification-dot" aria-hidden="true" />
+
+              <NotificationBadge />
             </button>
           </div>
         </header>

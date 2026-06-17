@@ -7,6 +7,7 @@ import { env } from "./config/env.js";
 
 import healthRoutes from "./routes/healthRoutes.js";
 import requestRoutes from "./routes/requestRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 export function createApp() {
   const app = express();
@@ -42,6 +43,7 @@ export function createApp() {
   // Rutas API
   app.use("/api/health", healthRoutes);
   app.use("/api/requests", requestRoutes);
+  app.use("/api/notifications", notificationRoutes);
   app.use(
   "/uploads",
   express.static(path.resolve("uploads"))

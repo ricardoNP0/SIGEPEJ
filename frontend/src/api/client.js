@@ -273,6 +273,35 @@ export const apiClient = {
     }
   },
 
+  // Get Notifications for current user
+  async getNotifications() {
+    try {
+      const response = await fetch(`${API_URL}/notifications`, {
+        headers: this.getAuthHeaders()
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error fetching notifications");
+    } catch (error) {
+      console.warn("Backend getNotifications failed, returning mock empty:", error.message);
+      return { success: true, unreadCount: 0, notifications: [] };
+    }
+  },
+
+  async markNotificationRead(id) {
+    try {
+      const response = await fetch(`${API_URL}/notifications/${id}/read`, {
+        method: "PATCH",
+        headers: this.getAuthHeaders()
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error marking notification read");
+    } catch (error) {
+      console.warn("Backend markNotificationRead failed:", error.message);
+      // Fallback: return mock success
+      return { success: true };
+    }
+  },
+
   // Create Request
   async createRequest(formData) {
     try {

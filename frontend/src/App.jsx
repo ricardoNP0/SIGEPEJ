@@ -16,6 +16,7 @@ import StudentRequestForm from "./features/requests/StudentRequestForm.jsx";
 import TeacherRequestForm from "./features/requests/TeacherRequestForm.jsx";
 import RequestHistoryPage from "./features/requests/RequestHistoryPage.jsx";
 import DirectorReviewQueue from "./features/requests/DirectorReviewQueue.jsx";
+import NotificationsPage from "./features/notifications/NotificationsPage";
 
 
 const stats = [
@@ -215,6 +216,8 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+
+          <Route path="notificaciones" element={<NotificationsPage />} />
 
           {/* Sprint 1: Rutas implementadas */}
           <Route path="nueva-solicitud" element={<StudentRequestForm />} />
