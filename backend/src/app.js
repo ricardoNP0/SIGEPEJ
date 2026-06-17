@@ -8,6 +8,11 @@ import courseRoutes from "./routes/courseRoutes.js";
 import healthRoutes from "./routes/healthRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import requestRoutes from "./routes/requestRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import catalogRoutes from "./routes/catalogRoutes.js";
+import auditRoutes from "./routes/auditRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
 
 export function createApp() {
   const app = express();
@@ -31,6 +36,11 @@ export function createApp() {
   app.use("/api/courses", courseRoutes);
   app.use("/api/requests", requestRoutes);
   app.use("/api/attendance", attendanceRoutes);
+  app.use("/api/notifications", notificationRoutes);
+  app.use("/api/users", userRoutes);
+  app.use("/api/catalogs", catalogRoutes);
+  app.use("/api/audit", auditRoutes);
+  app.use("/api/reports", reportRoutes);
 
   app.use((req, res) => {
     res.status(404).json({ message: "Ruta no encontrada" });

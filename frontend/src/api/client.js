@@ -167,10 +167,119 @@ const INITIAL_MOCK_REQUESTS = [
   }
 ];
 
+const INITIAL_MOCK_NOTIFICATIONS = [
+  {
+    _id: "notif-001",
+    title: "Solicitud aprobada",
+    message: "Tu solicitud de ausencia fue aprobada.",
+    type: "revision",
+    read: false,
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    _id: "notif-002",
+    title: "Solicitud observada",
+    message: "Debes corregir la evidencia adjunta.",
+    type: "solicitud",
+    read: false,
+    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    _id: "notif-003",
+    title: "Asistencia actualizada",
+    message: "Una licencia fue aplicada como L en asistencia.",
+    type: "asistencia",
+    read: true,
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  }
+];
+
+const INITIAL_MOCK_CAREERS = [
+  {
+    _id: "career-sis",
+    code: "SIS",
+    name: "Ingenieria de Sistemas",
+    director: { firstName: "Christian", lastName: "Montano", code: "DIR-SIS-001" },
+    isActive: true
+  }
+];
+
+const INITIAL_MOCK_SUBJECTS = [
+  { _id: "sub-web3", code: "WEB3", name: "Programacion Web III", career: INITIAL_MOCK_CAREERS[0], semester: 6, isActive: true },
+  { _id: "sub-bd2", code: "BD2", name: "Base de Datos II", career: INITIAL_MOCK_CAREERS[0], semester: 5, isActive: true },
+  { _id: "sub-prog3", code: "PROG3", name: "Programacion III", career: INITIAL_MOCK_CAREERS[0], semester: 4, isActive: true }
+];
+
+const INITIAL_MOCK_COURSES_EXPANDED = MOCK_COURSES.map((course) => ({
+  _id: course.id,
+  code: course.code,
+  subject: {
+    _id: `sub-${course.subjectCode.toLowerCase()}`,
+    code: course.subjectCode,
+    name: course.subjectName
+  },
+  career: INITIAL_MOCK_CAREERS[0],
+  teacher: {
+    firstName: course.teacherName.split(" ")[0],
+    lastName: course.teacherName.split(" ").slice(1).join(" "),
+    code: course.teacherUsername
+  },
+  parallel: course.parallel,
+  period: "2026-1",
+  schedule: [{ day: "lunes", startTime: "08:00", endTime: "10:00", classroom: "Lab 3" }],
+  isActive: true
+}));
+
+const INITIAL_MOCK_AUDIT = [
+  {
+    _id: "audit-001",
+    actor: { firstName: "Ricardo", lastName: "Nunez del Prado", role: "estudiante", code: "EST-2026-001", username: "ricardo_np" },
+    action: "crear_solicitud",
+    entityType: "Request",
+    entityId: "req-001",
+    metadata: { status: "pendiente", mode: "permiso_anticipado" },
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    _id: "audit-002",
+    actor: { firstName: "Christian", lastName: "Montano", role: "director", code: "DIR-SIS-001", username: "director_sistemas" },
+    action: "observado_solicitud",
+    entityType: "Request",
+    entityId: "req-002",
+    metadata: { status: "observado", comment: "Adjuntar certificado medico legible." },
+    createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString()
+  }
+];
+
 // Initialize mock DB in localStorage
 function initMockDb() {
   if (!localStorage.getItem("sigepej_mock_requests")) {
     localStorage.setItem("sigepej_mock_requests", JSON.stringify(INITIAL_MOCK_REQUESTS));
+  }
+  if (!localStorage.getItem("sigepej_mock_notifications")) {
+    localStorage.setItem("sigepej_mock_notifications", JSON.stringify(INITIAL_MOCK_NOTIFICATIONS));
+  }
+  if (!localStorage.getItem("sigepej_mock_users")) {
+    const users = MOCK_USERS.map((user) => ({
+      _id: `usr-${user.username}`,
+      id: `usr-${user.username}`,
+      ...user,
+      isActive: true,
+      career: user.role !== "administrador" ? INITIAL_MOCK_CAREERS[0] : undefined
+    }));
+    localStorage.setItem("sigepej_mock_users", JSON.stringify(users));
+  }
+  if (!localStorage.getItem("sigepej_mock_careers")) {
+    localStorage.setItem("sigepej_mock_careers", JSON.stringify(INITIAL_MOCK_CAREERS));
+  }
+  if (!localStorage.getItem("sigepej_mock_subjects")) {
+    localStorage.setItem("sigepej_mock_subjects", JSON.stringify(INITIAL_MOCK_SUBJECTS));
+  }
+  if (!localStorage.getItem("sigepej_mock_courses")) {
+    localStorage.setItem("sigepej_mock_courses", JSON.stringify(INITIAL_MOCK_COURSES_EXPANDED));
+  }
+  if (!localStorage.getItem("sigepej_mock_audit")) {
+    localStorage.setItem("sigepej_mock_audit", JSON.stringify(INITIAL_MOCK_AUDIT));
   }
 }
 initMockDb();
@@ -181,6 +290,83 @@ function getMockRequests() {
 
 function saveMockRequests(requests) {
   localStorage.setItem("sigepej_mock_requests", JSON.stringify(requests));
+}
+
+function getStoredArray(key, fallback = []) {
+  return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+}
+
+function saveStoredArray(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getMockNotifications() {
+  return getStoredArray("sigepej_mock_notifications", INITIAL_MOCK_NOTIFICATIONS);
+}
+
+function saveMockNotifications(notifications) {
+  saveStoredArray("sigepej_mock_notifications", notifications);
+}
+
+function getMockUsers() {
+  return getStoredArray("sigepej_mock_users");
+}
+
+function saveMockUsers(users) {
+  saveStoredArray("sigepej_mock_users", users);
+}
+
+function getMockCareers() {
+  return getStoredArray("sigepej_mock_careers", INITIAL_MOCK_CAREERS);
+}
+
+function saveMockCareers(careers) {
+  saveStoredArray("sigepej_mock_careers", careers);
+}
+
+function getMockSubjects() {
+  return getStoredArray("sigepej_mock_subjects", INITIAL_MOCK_SUBJECTS);
+}
+
+function saveMockSubjects(subjects) {
+  saveStoredArray("sigepej_mock_subjects", subjects);
+}
+
+function getMockCourses() {
+  return getStoredArray("sigepej_mock_courses", INITIAL_MOCK_COURSES_EXPANDED);
+}
+
+function saveMockCourses(courses) {
+  saveStoredArray("sigepej_mock_courses", courses);
+}
+
+function getMockAudit() {
+  return getStoredArray("sigepej_mock_audit", INITIAL_MOCK_AUDIT);
+}
+
+function saveMockAudit(audit) {
+  saveStoredArray("sigepej_mock_audit", audit);
+}
+
+function addMockAuditLog(action, entityType, entityId, metadata) {
+  const audit = getMockAudit();
+  const currentUser = JSON.parse(localStorage.getItem("sigepej_user") || "{}");
+  audit.unshift({
+    _id: `audit-${Date.now()}`,
+    actor: {
+      firstName: currentUser.firstName || "Admin",
+      lastName: currentUser.lastName || "SIGEPEJ",
+      role: currentUser.role || "administrador",
+      code: currentUser.code || "ADM-001",
+      username: currentUser.username || "admin"
+    },
+    action,
+    entityType,
+    entityId,
+    metadata,
+    createdAt: new Date().toISOString()
+  });
+  saveMockAudit(audit);
 }
 
 function normalizeStatus(status) {
@@ -542,6 +728,360 @@ export const apiClient = {
         return { ok: true, request: requests[idx] };
       }
       throw new Error("Solicitud no encontrada en mock DB");
+    }
+  },
+
+  async getNotifications() {
+    try {
+      const response = await fetch(`${API_URL}/notifications`, {
+        headers: getHeaders()
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data.notifications || [];
+      }
+      throw new Error("API error fetching notifications");
+    } catch (error) {
+      console.warn("Backend getNotifications failed, using mock data:", error.message);
+      return getMockNotifications();
+    }
+  },
+
+  async markNotificationAsRead(notificationId) {
+    try {
+      const response = await fetch(`${API_URL}/notifications/${notificationId}/read`, {
+        method: "PATCH",
+        headers: getHeaders()
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error marking notification as read");
+    } catch (error) {
+      console.warn("Backend markNotificationAsRead failed, using mock data:", error.message);
+      const notifications = getMockNotifications();
+      const notification = notifications.find((item) => item._id === notificationId);
+      if (notification) {
+        notification.read = true;
+        notification.readAt = new Date().toISOString();
+        saveMockNotifications(notifications);
+      }
+      return { _id: notificationId, read: true };
+    }
+  },
+
+  async markAllNotificationsAsRead() {
+    try {
+      const response = await fetch(`${API_URL}/notifications/read/all`, {
+        method: "PATCH",
+        headers: getHeaders()
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error marking all notifications as read");
+    } catch (error) {
+      console.warn("Backend markAllNotificationsAsRead failed, using mock data:", error.message);
+      const notifications = getMockNotifications().map((item) => ({
+        ...item,
+        read: true,
+        readAt: new Date().toISOString()
+      }));
+      saveMockNotifications(notifications);
+      return { message: "Notificaciones marcadas como leidas" };
+    }
+  },
+
+  async getUnreadCount() {
+    try {
+      const response = await fetch(`${API_URL}/notifications/unread/count`, {
+        headers: getHeaders()
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data.unreadCount || 0;
+      }
+      throw new Error("API error fetching unread count");
+    } catch (error) {
+      console.warn("Backend getUnreadCount failed, using mock data:", error.message);
+      return getMockNotifications().filter((item) => !item.read).length;
+    }
+  },
+
+  async deleteNotification(notificationId) {
+    try {
+      const response = await fetch(`${API_URL}/notifications/${notificationId}`, {
+        method: "DELETE",
+        headers: getHeaders()
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error deleting notification");
+    } catch (error) {
+      console.warn("Backend deleteNotification failed, using mock data:", error.message);
+      saveMockNotifications(getMockNotifications().filter((item) => item._id !== notificationId));
+      return { message: "Notificacion eliminada" };
+    }
+  },
+
+  async getUsers() {
+    try {
+      const response = await fetch(`${API_URL}/users`, {
+        headers: getHeaders()
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error fetching users");
+    } catch (error) {
+      console.warn("Backend getUsers failed, using mock data:", error.message);
+      return getMockUsers();
+    }
+  },
+
+  async createUser(userData) {
+    try {
+      const response = await fetch(`${API_URL}/users`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(userData)
+      });
+      if (response.ok) return await response.json();
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.message || "API error creating user");
+    } catch (error) {
+      console.warn("Backend createUser failed, using mock data:", error.message);
+      const users = getMockUsers();
+      const exists = users.find((user) => user.username === userData.username || user.email === userData.email);
+      if (exists) throw new Error("El usuario o correo electronico ya esta registrado");
+      const newUser = {
+        _id: `usr-${userData.username}`,
+        id: `usr-${userData.username}`,
+        ...userData,
+        isActive: true
+      };
+      users.unshift(newUser);
+      saveMockUsers(users);
+      addMockAuditLog("crear_usuario", "User", newUser._id, { username: newUser.username, role: newUser.role });
+      return newUser;
+    }
+  },
+
+  async updateUserRole(userId, role) {
+    try {
+      const response = await fetch(`${API_URL}/users/${userId}/role`, {
+        method: "PATCH",
+        headers: getHeaders(),
+        body: JSON.stringify({ role })
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error updating user role");
+    } catch (error) {
+      console.warn("Backend updateUserRole failed, using mock data:", error.message);
+      const users = getMockUsers();
+      const index = users.findIndex((user) => user._id === userId || user.id === userId);
+      if (index === -1) throw new Error("Usuario no encontrado en mock DB");
+      const oldRole = users[index].role;
+      users[index].role = role;
+      saveMockUsers(users);
+      addMockAuditLog("cambiar_rol", "User", userId, { username: users[index].username, oldRole, newRole: role });
+      return users[index];
+    }
+  },
+
+  async updateUserStatus(userId, isActive) {
+    try {
+      const response = await fetch(`${API_URL}/users/${userId}/status`, {
+        method: "PATCH",
+        headers: getHeaders(),
+        body: JSON.stringify({ isActive })
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error updating user status");
+    } catch (error) {
+      console.warn("Backend updateUserStatus failed, using mock data:", error.message);
+      const users = getMockUsers();
+      const index = users.findIndex((user) => user._id === userId || user.id === userId);
+      if (index === -1) throw new Error("Usuario no encontrado en mock DB");
+      users[index].isActive = isActive;
+      saveMockUsers(users);
+      addMockAuditLog(isActive ? "desbloquear_usuario" : "bloquear_usuario", "User", userId, { username: users[index].username });
+      return users[index];
+    }
+  },
+
+  async getCareers() {
+    try {
+      const response = await fetch(`${API_URL}/catalogs/careers`, {
+        headers: getHeaders()
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error fetching careers");
+    } catch (error) {
+      console.warn("Backend getCareers failed, using mock data:", error.message);
+      return getMockCareers();
+    }
+  },
+
+  async createCareer(careerData) {
+    try {
+      const response = await fetch(`${API_URL}/catalogs/careers`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(careerData)
+      });
+      if (response.ok) return await response.json();
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.message || "API error creating career");
+    } catch (error) {
+      console.warn("Backend createCareer failed, using mock data:", error.message);
+      const careers = getMockCareers();
+      if (careers.find((career) => career.code === careerData.code.toUpperCase())) {
+        throw new Error("Ya existe una carrera con ese codigo");
+      }
+      const newCareer = {
+        _id: `career-${Date.now()}`,
+        code: careerData.code.toUpperCase().trim(),
+        name: careerData.name,
+        director: undefined,
+        isActive: true
+      };
+      careers.unshift(newCareer);
+      saveMockCareers(careers);
+      addMockAuditLog("crear_carrera", "Career", newCareer._id, { code: newCareer.code, name: newCareer.name });
+      return newCareer;
+    }
+  },
+
+  async getSubjects() {
+    try {
+      const response = await fetch(`${API_URL}/catalogs/subjects`, {
+        headers: getHeaders()
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error fetching subjects");
+    } catch (error) {
+      console.warn("Backend getSubjects failed, using mock data:", error.message);
+      return getMockSubjects();
+    }
+  },
+
+  async createSubject(subjectData) {
+    try {
+      const response = await fetch(`${API_URL}/catalogs/subjects`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(subjectData)
+      });
+      if (response.ok) return await response.json();
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.message || "API error creating subject");
+    } catch (error) {
+      console.warn("Backend createSubject failed, using mock data:", error.message);
+      const subjects = getMockSubjects();
+      if (subjects.find((subject) => subject.code === subjectData.code.toUpperCase())) {
+        throw new Error("Ya existe una materia con ese codigo");
+      }
+      const career = getMockCareers().find((item) => item._id === subjectData.career || item.code === subjectData.career);
+      const newSubject = {
+        _id: `sub-${Date.now()}`,
+        code: subjectData.code.toUpperCase().trim(),
+        name: subjectData.name,
+        career: career || INITIAL_MOCK_CAREERS[0],
+        semester: Number(subjectData.semester),
+        isActive: true
+      };
+      subjects.unshift(newSubject);
+      saveMockSubjects(subjects);
+      addMockAuditLog("crear_materia", "Subject", newSubject._id, { code: newSubject.code, name: newSubject.name });
+      return newSubject;
+    }
+  },
+
+  async getCourses() {
+    try {
+      const response = await fetch(`${API_URL}/catalogs/courses`, {
+        headers: getHeaders()
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error fetching courses");
+    } catch (error) {
+      console.warn("Backend getCourses failed, using mock data:", error.message);
+      return getMockCourses();
+    }
+  },
+
+  async createCourse(courseData) {
+    try {
+      const response = await fetch(`${API_URL}/catalogs/courses`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(courseData)
+      });
+      if (response.ok) return await response.json();
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.message || "API error creating course");
+    } catch (error) {
+      console.warn("Backend createCourse failed, using mock data:", error.message);
+      const courses = getMockCourses();
+      if (courses.find((course) => course.code === courseData.code.toUpperCase())) {
+        throw new Error("Ya existe un curso/paralelo con ese codigo");
+      }
+      const newCourse = {
+        _id: `course-${Date.now()}`,
+        code: courseData.code.toUpperCase().trim(),
+        subject: getMockSubjects().find((subject) => subject._id === courseData.subject) || INITIAL_MOCK_SUBJECTS[0],
+        career: getMockCareers().find((career) => career._id === courseData.career) || INITIAL_MOCK_CAREERS[0],
+        teacher: getMockUsers().find((user) => user._id === courseData.teacher) || { firstName: "Docente", lastName: "Asignado" },
+        parallel: courseData.parallel.toUpperCase().trim(),
+        period: courseData.period,
+        schedule: courseData.schedule || [],
+        isActive: true
+      };
+      courses.unshift(newCourse);
+      saveMockCourses(courses);
+      addMockAuditLog("crear_paralelo", "Course", newCourse._id, { code: newCourse.code, parallel: newCourse.parallel });
+      return newCourse;
+    }
+  },
+
+  async getAuditLogs() {
+    try {
+      const response = await fetch(`${API_URL}/audit`, {
+        headers: getHeaders()
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error fetching audit logs");
+    } catch (error) {
+      console.warn("Backend getAuditLogs failed, using mock data:", error.message);
+      return getMockAudit();
+    }
+  },
+
+  async getReportStats() {
+    try {
+      const response = await fetch(`${API_URL}/reports/stats`, {
+        headers: getHeaders()
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error fetching report stats");
+    } catch (error) {
+      console.warn("Backend getReportStats failed, using mock data:", error.message);
+      const users = getMockUsers();
+      const requests = getMockRequests();
+      const countStatus = (status) => requests.filter((item) => normalizeStatus(item.status) === status).length;
+      const countReason = (reason) => requests.filter((item) => item.reasonType === reason).length;
+      return {
+        summary: {
+          totalUsers: users.length,
+          pendingRequests: countStatus("pendiente"),
+          approvedRequests: countStatus("aprobado"),
+          observedRequests: countStatus("observado"),
+          rejectedRequests: countStatus("rechazado"),
+          totalRequests: requests.length,
+          attendanceRate: 88,
+          licenseRecords: 5
+        },
+        requestsByReason: [
+          { name: "Salud", value: countReason("salud") },
+          { name: "Academico", value: countReason("academico") },
+          { name: "Personal", value: countReason("personal") },
+          { name: "Otros", value: countReason("otro") }
+        ]
+      };
     }
   },
 

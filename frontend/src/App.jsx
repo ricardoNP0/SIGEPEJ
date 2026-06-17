@@ -17,6 +17,11 @@ import RevisionPage from "./features/requests/RevisionPage.jsx";
 import StudentRequestForm from "./features/requests/StudentRequestForm.jsx";
 import TeacherRequestForm from "./features/requests/TeacherRequestForm.jsx";
 import RequestHistoryPage from "./features/requests/RequestHistoryPage.jsx";
+import NotificationsPage from "./features/notifications/NotificationsPage.jsx";
+import UsersPage from "./features/users/UsersPage.jsx";
+import CatalogsPage from "./features/catalogs/CatalogsPage.jsx";
+import ReportsPage from "./features/reports/ReportsPage.jsx";
+import AuditPage from "./features/audit/AuditPage.jsx";
 
 const stats = [
   { label: "Solicitudes pendientes", value: "18", detail: "Requieren revision", icon: Clock3 },
@@ -30,39 +35,6 @@ const recentRequests = [
   { code: "SOL-2026-002", owner: "Daniel Escobar", type: "Justificacion posterior", status: "observada", date: "2026-06-02" },
   { code: "SOL-2026-003", owner: "Ana Rojas", type: "Ausencia docente", status: "aprobada", date: "2026-06-12" },
 ];
-
-const pageDetails = {
-  "/notificaciones": {
-    title: "Notificaciones",
-    eyebrow: "Seguimiento",
-    description: "Avisos de aprobacion, rechazo, observaciones, apelaciones y solicitudes pendientes segun el rol activo.",
-    actions: ["Ver detalle", "Marcar como leida", "Abrir solicitud"],
-  },
-  "/reportes": {
-    title: "Reportes",
-    eyebrow: "Analitica",
-    description: "Reportes por carrera, materia, estado, docente, estudiante y periodo academico.",
-    actions: ["Filtrar", "Exportar", "Ver indicadores"],
-  },
-  "/catalogos": {
-    title: "Catalogos academicos",
-    eyebrow: "Base institucional",
-    description: "Pantallas placeholder para carreras, materias, cursos, paralelos, docentes e inscripciones simuladas.",
-    actions: ["Carreras", "Materias", "Inscripciones"],
-  },
-  "/usuarios": {
-    title: "Usuarios y roles",
-    eyebrow: "Administrador",
-    description: "Administracion visual de estudiantes, docentes, directores, secretarios y permisos de acceso.",
-    actions: ["Crear usuario", "Asignar rol", "Bloquear acceso"],
-  },
-  "/auditoria": {
-    title: "Auditoria",
-    eyebrow: "Trazabilidad",
-    description: "Historial de aprobaciones, cambios de estado, fecha, hora, usuario responsable y motivo de cada accion critica.",
-    actions: ["Ver evento", "Filtrar usuario", "Revisar cambios"],
-  },
-};
 
 function DashboardPage() {
   return (
@@ -148,50 +120,6 @@ function DashboardPage() {
   );
 }
 
-function PlaceholderPage({ details }) {
-  return (
-    <section className="content-stack">
-      <div className="page-heading">
-        <span className="eyebrow">{details.eyebrow}</span>
-        <h1>{details.title}</h1>
-        <p>{details.description}</p>
-      </div>
-
-      <div className="placeholder-layout">
-        <section className="surface-panel">
-          <div className="panel-header">
-            <div>
-              <span className="eyebrow">Pendiente de desarrollo</span>
-              <h2>Estructura inicial</h2>
-            </div>
-            <FileText size={22} className="muted-icon" aria-hidden="true" />
-          </div>
-          <p className="panel-copy">
-            Esta pantalla ya esta enrutada y lista para que el responsable de la
-            tarea agregue formularios, tablas, consumo de API y validaciones.
-          </p>
-          <div className="action-list">
-            {details.actions.map((action) => (
-              <button className="secondary-action" type="button" key={action}>
-                {action}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <aside className="surface-panel guidance-panel">
-          <Bell size={22} className="muted-icon" aria-hidden="true" />
-          <h2>Regla de integracion</h2>
-          <p>
-            No duplicar sidebar ni topbar. Cada modulo debe trabajar dentro de
-            esta zona de contenido para mantener consistencia entre roles.
-          </p>
-        </aside>
-      </div>
-    </section>
-  );
-}
-
 export default function App() {
   return (
     <AuthProvider>
@@ -210,6 +138,11 @@ export default function App() {
           <Route path="mis-solicitudes" element={<RequestHistoryPage />} />
           <Route path="revision" element={<RevisionPage />} />
           <Route path="asistencia" element={<AttendancePage />} />
+          <Route path="notificaciones" element={<NotificationsPage />} />
+          <Route path="usuarios" element={<UsersPage />} />
+          <Route path="catalogos" element={<CatalogsPage />} />
+          <Route path="reportes" element={<ReportsPage />} />
+          <Route path="auditoria" element={<AuditPage />} />
           <Route path="historial" element={<Navigate to="/mis-solicitudes" replace />} />
 
           {/* Alias conservados por compatibilidad con avances del sprint */}
@@ -217,14 +150,6 @@ export default function App() {
           <Route path="seguimiento" element={<Navigate to="/revision" replace />} />
           <Route path="administraron" element={<Navigate to="/usuarios" replace />} />
 
-          {/* Resto de rutas placeholder */}
-          {Object.entries(pageDetails).map(([path, details]) => (
-            <Route
-              key={path}
-              path={path.slice(1)}
-              element={<PlaceholderPage details={details} />}
-            />
-          ))}
         </Route>
 
         {/* Fallback */}

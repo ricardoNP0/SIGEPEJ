@@ -163,7 +163,12 @@ export function AppLayout() {
               <Search size={18} aria-hidden="true" />
               <input type="search" placeholder="Buscar solicitud, materia o usuario" />
             </label>
-            <button className="icon-button" type="button" aria-label="Ver notificaciones">
+            <button
+              className="icon-button"
+              type="button"
+              aria-label="Ver notificaciones"
+              onClick={() => navigate("/notificaciones")}
+            >
               <Bell size={20} aria-hidden="true" />
               <span className="notification-dot" aria-hidden="true" />
             </button>
