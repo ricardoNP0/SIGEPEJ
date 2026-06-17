@@ -171,7 +171,7 @@ cd frontend
 npm run build
 ```
 
-## Usuarios demo
+## Usuarios demo y flujos por rol
 
 Todos los usuarios demo del seed usan:
 
@@ -179,17 +179,82 @@ Todos los usuarios demo del seed usan:
 password123
 ```
 
-Usuarios principales:
+| Rol | Usuario | Contraseña | Uso principal |
+|---|---|---|---|
+| Administrador | `admin` | `password123` | Gestionar usuarios, catálogos, reportes y auditoría. |
+| Director de carrera | `director_sistemas` | `password123` | Revisar solicitudes, aprobar/rechazar/observar y modificar licencias con justificación. |
+| Secretario académico | `secretaria_sistemas` | `password123` | Apoyar revisión, gestionar catálogos y consultar reportes. |
+| Docente | `ana_rojas` | `password123` | Solicitar permiso docente y registrar asistencia en sus materias. |
+| Docente | `carlos_mendez` | `password123` | Registrar asistencia en sus materias asignadas. |
+| Estudiante | `ricardo_np` | `password123` | Crear solicitudes, ver historial, evidencias y notificaciones. |
+| Estudiante | `daniel_escobar` | `password123` | Probar solicitud observada y corrección. |
+| Estudiante | `josue_rodriguez` | `password123` | Probar historial y flujo estudiantil. |
+| Estudiante | `luis_lopez` | `password123` | Probar historial y flujo estudiantil. |
 
-- `admin`
-- `director_sistemas`
-- `secretaria_sistemas`
-- `ana_rojas`
-- `carlos_mendez`
-- `ricardo_np`
-- `daniel_escobar`
-- `josue_rodriguez`
-- `luis_lopez`
+### Flujo del administrador
+
+1. Iniciar sesión con `admin` / `password123`.
+2. Entrar a `Usuarios`.
+3. Crear un usuario demo o cambiar rol/estado de un usuario existente.
+4. Entrar a `Catálogos`.
+5. Crear carrera, materia o paralelo.
+6. En paralelos, registrar uno o varios horarios por semana.
+7. Entrar a `Reportes` y validar indicadores.
+8. Entrar a `Auditoría` y confirmar que las acciones quedaron registradas.
+
+### Flujo del director de carrera
+
+1. Iniciar sesión con `director_sistemas` / `password123`.
+2. Entrar a `Revisión`.
+3. Revisar solicitudes pendientes, observadas, apeladas, aprobadas o rechazadas.
+4. Abrir `Ver` para consultar detalle, fechas, materias y evidencia adjunta.
+5. Aprobar una solicitud estudiantil.
+6. Entrar a `Asistencia` y verificar que la fecha/materia aprobada quedó marcada como `L`.
+7. Si corresponde, modificar manualmente una asistencia a `P`, `F` o `L` con justificación.
+8. Revisar `Auditoría` para confirmar trazabilidad.
+
+### Flujo del secretario académico
+
+1. Iniciar sesión con `secretaria_sistemas` / `password123`.
+2. Entrar a `Revisión` para consultar solicitudes.
+3. Entrar a `Catálogos` para crear o revisar carreras, materias y paralelos.
+4. Entrar a `Reportes` para filtrar por carrera, materia, estado y fechas.
+5. Revisar `Notificaciones` si existen acciones pendientes.
+
+### Flujo del docente
+
+1. Iniciar sesión con `ana_rojas` / `password123`.
+2. Entrar a `Solicitud docente`.
+3. Seleccionar materia, fecha y motivo.
+4. Probar que el sistema no permite enviar una fecha donde no existe horario para ese paralelo.
+5. Entrar a `Asistencia`.
+6. Elegir materia y fecha válida.
+7. Marcar estudiantes como `P` o `F`.
+8. Confirmar que una licencia `L` aplicada por Dirección queda bloqueada para el docente.
+9. Revisar `Notificaciones`.
+
+### Flujo del estudiante
+
+1. Iniciar sesión con `ricardo_np` / `password123`.
+2. Entrar a `Nueva solicitud`.
+3. Crear un permiso anticipado con fecha futura válida y materia inscrita.
+4. Probar que un permiso anticipado con fecha pasada es rechazado.
+5. Probar que una justificación posterior con fecha futura es rechazada.
+6. Si el motivo es salud, adjuntar evidencia obligatoria.
+7. Entrar a `Mis solicitudes`.
+8. Ver estado, fecha de solicitud, materias, evidencia y comentarios de revisión.
+9. Si la solicitud fue observada, usar `Corregir`.
+10. Si la solicitud fue rechazada, usar `Apelar`.
+11. Revisar `Notificaciones` para ver respuestas de Dirección.
+
+### Flujo completo recomendado para defensa
+
+1. Estudiante `ricardo_np` crea una solicitud válida.
+2. Director `director_sistemas` entra a `Revisión`, ve la evidencia y aprueba.
+3. Director entra a `Asistencia` y confirma que el estudiante quedó como `L`.
+4. Docente `ana_rojas` entra a `Asistencia` y confirma que no puede modificar esa `L`.
+5. Administrador `admin` entra a `Auditoría` y verifica el registro de la acción.
+6. Administrador o secretario entra a `Reportes` y valida que los indicadores se actualizan.
 
 ## Base de datos inicial
 
