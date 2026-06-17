@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
   Activity,
   ArrowRight,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import { AppLayout } from "./layouts/AppLayout.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { apiClient } from "./api/client.js";
 import LoginPage from "./features/auth/LoginPage.jsx";
 import AttendancePage from "./features/attendance/AttendancePage.jsx";
 import RevisionPage from "./features/requests/RevisionPage.jsx";
@@ -23,13 +25,6 @@ import CatalogsPage from "./features/catalogs/CatalogsPage.jsx";
 import ReportsPage from "./features/reports/ReportsPage.jsx";
 import AuditPage from "./features/audit/AuditPage.jsx";
 
-const stats = [
-  { label: "Solicitudes pendientes", value: "18", detail: "Requieren revision", icon: Clock3 },
-  { label: "Aprobadas esta semana", value: "34", detail: "Con registro de auditoria", icon: CheckCircle2 },
-  { label: "Licencias aplicadas", value: "27", detail: "Marcadas como L", icon: ShieldCheck },
-  { label: "Usuarios demo", value: "9", detail: "Base seed cargada", icon: UsersRound },
-];
-
 const recentRequests = [
   { code: "SOL-2026-001", owner: "Ricardo Nunez", type: "Permiso anticipado", status: "pendiente", date: "2026-06-10" },
   { code: "SOL-2026-002", owner: "Daniel Escobar", type: "Justificacion posterior", status: "observada", date: "2026-06-02" },
@@ -37,6 +32,59 @@ const recentRequests = [
 ];
 
 function DashboardPage() {
+  const [summary, setSummary] = useState({
+    pendingRequests: 18,
+    approvedRequests: 34,
+    licenseRecords: 27,
+    totalUsers: 9,
+  });
+  const [requests, setRequests] = useState(recentRequests);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadDashboard() {
+      try {
+        const [statsData, requestData] = await Promise.all([
+          apiClient.getReportStats(),
+          apiClient.getAllRequests("todos"),
+        ]);
+
+        if (!active) return;
+
+        setSummary({
+          pendingRequests: statsData?.summary?.pendingRequests ?? 0,
+          approvedRequests: statsData?.summary?.approvedRequests ?? 0,
+          licenseRecords: statsData?.summary?.licenseRecords ?? 0,
+          totalUsers: statsData?.summary?.totalUsers ?? 0,
+        });
+        setRequests(
+          requestData.slice(0, 3).map((item) => ({
+            code: item.code,
+            owner: item.requesterName || item.requesterUsername || "Usuario",
+            type: item.requestType?.replaceAll("_", " ") || item.mode?.replaceAll("_", " ") || "Solicitud",
+            status: item.status,
+            date: item.dates?.[0]?.date || item.createdAt || "",
+          }))
+        );
+      } catch (error) {
+        console.warn("No se pudo cargar el dashboard desde API:", error.message);
+      }
+    }
+
+    loadDashboard();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const dashboardStats = [
+    { label: "Solicitudes pendientes", value: summary.pendingRequests, detail: "Requieren revision", icon: Clock3 },
+    { label: "Aprobadas", value: summary.approvedRequests, detail: "Con registro de auditoria", icon: CheckCircle2 },
+    { label: "Licencias aplicadas", value: summary.licenseRecords, detail: "Marcadas como L", icon: ShieldCheck },
+    { label: "Usuarios demo", value: summary.totalUsers, detail: "Base seed cargada", icon: UsersRound },
+  ];
+
   return (
     <section className="content-stack">
       <div className="page-heading">
@@ -49,7 +97,7 @@ function DashboardPage() {
       </div>
 
       <div className="stat-grid">
-        {stats.map((item) => {
+        {dashboardStats.map((item) => {
           const Icon = item.icon;
           return (
             <article className="stat-card" key={item.label}>
@@ -80,7 +128,7 @@ function DashboardPage() {
           </div>
 
           <div className="table-like" role="table" aria-label="Solicitudes recientes">
-            {recentRequests.map((request) => (
+            {requests.map((request) => (
               <div className="table-row" role="row" key={request.code}>
                 <div>
                   <strong>{request.code}</strong>

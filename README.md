@@ -254,18 +254,31 @@ Para que cualquier integrante pueda conectarse desde su laptop, en MongoDB Atlas
 
 Esto es solo para demo academica. Despues de la entrega se debe cambiar la contrasena o eliminar el usuario demo.
 
-## Estado del repositorio
+## Estado final del repositorio
 
-La base tecnica ya esta preparada para que el equipo trabaje:
+La aplicacion final ya esta integrada para demo academica:
 
 - `backend/`: Express, MongoDB Atlas, variables de entorno, modelos, seed y endpoint de prueba.
-- `frontend/`: React + Vite, variables de entorno y pantalla base.
+- `frontend/`: React + Vite, login, layout por roles y pantallas funcionales.
 - `docs/`: documentacion inicial y tarjetas sugeridas para Trello.
 - `preview/`: mockup HTML estatico y capturas.
 
 El proyecto permite gestionar solicitudes de ausencia para estudiantes y docentes, revision por Direccion, evidencias, asistencia `P/F/L`, notificaciones, auditoria y reportes.
 
-Los modulos reales de login, solicitudes, asistencia, auditoria, notificaciones y reportes se implementan como tareas del equipo.
+Los modulos reales de login, solicitudes, asistencia, auditoria, notificaciones, usuarios, catalogos y reportes ya estan integrados en la app final.
+
+## Validacion final ejecutada
+
+Se verifico:
+
+- Conexion exitosa a MongoDB Atlas con `npm run check:db`.
+- Seed completo con 9 usuarios, 1 carrera, 3 materias, 3 cursos, 12 inscripciones, solicitudes, evidencias, asistencias, notificaciones y auditoria.
+- Build del frontend con `npm run build`.
+- Login real contra backend.
+- Proteccion de rutas de solicitudes: sin token responde 401.
+- Revision de solicitud por Direccion.
+- Impacto automatico de aprobacion estudiantil: asistencia marcada como `L` y bloqueada.
+- Consulta de reportes, auditoria, usuarios, notificaciones, cursos y asistencia.
 
 ## Mockup visual
 

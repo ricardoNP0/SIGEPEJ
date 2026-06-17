@@ -1,6 +1,6 @@
 # Frontend SIGEPEJ
 
-Base inicial con React y Vite.
+Aplicacion frontend final de SIGEPEJ construida con React y Vite.
 
 ## Comandos
 
@@ -9,6 +9,14 @@ npm install
 npm run dev
 ```
 
-## Alcance de esta base
+## Pantallas integradas
 
-Esta base solo confirma que el proyecto frontend arranca y define una identidad visual inicial. Las pantallas reales deben implementarse desde el mockup de `preview/`.
+El frontend incluye login, dashboard, solicitudes estudiantiles, solicitudes docentes, historial, bandeja de revision, asistencia docente, notificaciones, usuarios, catalogos, auditoria y reportes.
+
+La API configurada esta en `frontend/.env`:
+
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+Para probar la aplicacion completa, levantar primero el backend y luego abrir `http://localhost:5173`.

@@ -51,7 +51,7 @@ export async function getReportStats(req, res) {
         { name: "Salud", value: await Request.countDocuments({ reasonType: "salud" }) },
         { name: "Académico", value: await Request.countDocuments({ reasonType: "academico" }) },
         { name: "Personal", value: await Request.countDocuments({ reasonType: "personal" }) },
-        { name: "Otros", value: await Request.countDocuments({ reasonType: "otros" }) },
+        { name: "Otros", value: await Request.countDocuments({ reasonType: { $in: ["otro", "emergencia", "fuerza_mayor"] } }) },
       ]
     });
   } catch (error) {

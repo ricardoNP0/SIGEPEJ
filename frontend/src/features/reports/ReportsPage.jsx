@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiClient } from "../../api/client.js";
 import {
+  AlertCircle,
   BarChart3,
   Users,
   FileText,
