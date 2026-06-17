@@ -8,14 +8,14 @@ const attendanceRecordSchema = new mongoose.Schema(
     request: { type: mongoose.Schema.Types.ObjectId, ref: "Request" },
     note: { type: String, trim: true },
   },
-  { _id: false }
+  { _id: true }
 );
 
 const attendanceSchema = new mongoose.Schema(
   {
     course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
     date: { type: Date, required: true },
-    takenBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    takenBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     status: { type: String, enum: ["abierta", "cerrada"], default: "abierta" },
     records: { type: [attendanceRecordSchema], default: [] },
   },
