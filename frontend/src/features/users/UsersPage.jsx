@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { apiClient } from "../../api/client.js";
 import { roleOptions } from "../../routes/menuConfig.js";
+import { AuthContext } from "../../context/AuthContext.jsx";
 import {
   Users,
   Search,
@@ -11,10 +12,13 @@ import {
   AlertCircle,
   X,
   Plus,
-  ShieldAlert
+  ShieldAlert,
+  Key
 } from "lucide-react";
 
 export default function UsersPage() {
+  const { user } = useContext(AuthContext);
+  const canReset = user && ["administrador", "director", "secretario"].includes(user.role);
   const [users, setUsers] = useState([]);
   const [careers, setCareers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +31,13 @@ export default function UsersPage() {
 
   // Create User Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const codePrefixes = { estudiante: "EST", docente: "DOC", director: "DIR", secretario: "SEC", admin: "ADM" };
+  function generateCode(role) {
+    const prefix = codePrefixes[role] || "USR";
+    const year = new Date().getFullYear();
+    const count = users.filter(u => (u.role || "").toLowerCase() === role).length;
+    return `${prefix}-${year}-${String(count + 1).padStart(3, "0")}`;
+  }
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -35,10 +46,16 @@ export default function UsersPage() {
     role: "estudiante",
     code: "",
     career: "",
-    phone: ""
+    phone: "",
+    password: ""
   });
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
+
+  // Auto-generar código al cambiar rol
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, code: generateCode(prev.role) }));
+  }, [formData.role, users]);
 
   async function loadData() {
     setLoading(true);
@@ -79,6 +96,19 @@ export default function UsersPage() {
     }
   };
 
+  const handleResetPassword = async (targetUser) => {
+    if (!confirm(`¿Restablecer la contraseña de ${targetUser.firstName} ${targetUser.lastName} a "password123"?`)) return;
+    try {
+      const passwordStore = JSON.parse(localStorage.getItem("sigepej_mock_passwords")) || {};
+      delete passwordStore[targetUser.username];
+      localStorage.setItem("sigepej_mock_passwords", JSON.stringify(passwordStore));
+      setSuccess(`Contraseña de ${targetUser.username} restablecida a "password123".`);
+      setTimeout(() => setSuccess(""), 4000);
+    } catch (err) {
+      alert("Error al restablecer la contraseña: " + err.message);
+    }
+  };
+
   const handleRoleChange = async (user, newRole) => {
     try {
       const updated = await apiClient.updateUserRole(user._id || user.id, newRole);
@@ -107,9 +137,10 @@ export default function UsersPage() {
         role: "estudiante",
         code: "",
         career: "",
-        phone: ""
+        phone: "",
+        password: ""
       });
-      setSuccess("Usuario creado con éxito (la contraseña predeterminada es password123).");
+      setSuccess("Usuario creado con éxito.");
       setTimeout(() => setSuccess(""), 5000);
     } catch (err) {
       setFormError(err.message || "Error al crear el usuario.");
@@ -159,7 +190,7 @@ export default function UsersPage() {
           
           <div style={{ display: "flex", gap: "10px" }}>
             <button 
-              onClick={() => setIsModalOpen(true)} 
+              onClick={() => { setFormData({ firstName: "", lastName: "", email: "", username: "", role: "estudiante", code: "", career: "", phone: "", password: "" }); setFormError(""); setIsModalOpen(true); }} 
               className="btn-primary" 
               type="button"
               style={{ display: "inline-flex", gap: "6px" }}
@@ -266,7 +297,18 @@ export default function UsersPage() {
                         {u.isActive ? "Activo" : "Bloqueado"}
                       </span>
                     </td>
-                    <td style={{ textAlign: "right" }}>
+                    <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                      {canReset && (
+                        <button
+                          onClick={() => handleResetPassword(u)}
+                          className="btn-secondary"
+                          style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px", display: "inline-flex", alignItems: "center", gap: "4px", marginRight: "6px" }}
+                          title="Restablecer contraseña a password123"
+                        >
+                          <Key size={14} />
+                          Rest. contraseña
+                        </button>
+                      )}
                       <button
                         onClick={() => handleToggleStatus(u)}
                         className={`btn-secondary ${u.isActive ? "btn-danger" : ""}`}
@@ -375,20 +417,30 @@ export default function UsersPage() {
                     ))}
                   </select>
                 </div>
-                <div className="form-group">
+                  <div className="form-group">
                   <label className="form-label" htmlFor="code">Código de Registro (SIS/Personal)</label>
                   <input
                     id="code"
                     type="text"
                     className="form-input"
-                    placeholder="ej. EST-2026-009 o DOC-009"
                     value={formData.code}
-                    onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
+                    disabled
                   />
                 </div>
               </div>
 
               <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="password">Contraseña</label>
+                  <input
+                    id="password"
+                    type="password"
+                    className="form-input"
+                    placeholder="Dejar vacío para asignar 'password123'"
+                    value={formData.password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  />
+                </div>
                 <div className="form-group">
                   <label className="form-label" htmlFor="career">Carrera (para Estudiantes/Directores)</label>
                   <select

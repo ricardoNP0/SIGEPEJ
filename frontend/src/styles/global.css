@@ -70,6 +70,22 @@ select:focus-visible {
   color: #ffffff;
   background: var(--uv-blue-950);
   border-right: 1px solid rgba(255, 255, 255, 0.12);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
 }
 
 .sidebar-head,

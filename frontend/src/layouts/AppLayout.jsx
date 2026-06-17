@@ -9,6 +9,7 @@ import {
   FilePlus2,
   FileText,
   Gauge,
+  Key,
   LogOut,
   Menu,
   Search,
@@ -33,12 +34,17 @@ const icons = {
   catalogs: UsersRound,
   users: UserCog,
   audit: ShieldCheck,
+  key: Key,
 };
 
 export function AppLayout() {
   const { user, loading, logout, activeRole } = useContext(AuthContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [passwordMsg, setPasswordMsg] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -50,15 +56,15 @@ export function AppLayout() {
   useEffect(() => {
     if (!user) return;
     
-    async function loadUnreadCount() {
-      try {
-        const data = await apiClient.getNotifications();
-        const count = data.filter((n) => !n.read).length;
-        setUnreadCount(count);
-      } catch (err) {
-        console.error("Error loading unread count:", err);
+      async function loadUnreadCount() {
+        try {
+          const data = await apiClient.getNotifications(user?.username);
+          const count = data.filter((n) => !n.read).length;
+          setUnreadCount(count);
+        } catch (err) {
+          console.error("Error loading unread count:", err);
+        }
       }
-    }
 
     loadUnreadCount();
     
@@ -71,6 +77,27 @@ export function AppLayout() {
       window.removeEventListener("notifications-updated", loadUnreadCount);
     };
   }, [user]);
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordMsg("");
+    setPasswordError("");
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError("Las contraseñas nuevas no coinciden.");
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+    try {
+      await apiClient.updatePassword(user.username, passwordForm.currentPassword, passwordForm.newPassword);
+      setPasswordMsg("Contraseña actualizada correctamente.");
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err) {
+      setPasswordError(err.message);
+    }
+  };
 
   const currentUser = useMemo(() => {
     if (!user) return { initials: "US", name: "Usuario", role: "Cargando..." };
@@ -163,6 +190,15 @@ export function AppLayout() {
               <small>{currentUser.role}</small>
             </div>
           </div>
+          <button
+            className="logout-link"
+            type="button"
+            onClick={() => { setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" }); setPasswordMsg(""); setPasswordError(""); setShowPasswordModal(true); }}
+            style={{ cursor: "pointer", border: "none", background: "none", width: "100%" }}
+          >
+            <Key size={18} aria-hidden="true" />
+            Cambiar contraseña
+          </button>
           <NavLink className="logout-link" to="/login" onClick={logout}>
             <LogOut size={18} aria-hidden="true" />
             Cerrar sesion
@@ -228,6 +264,70 @@ export function AppLayout() {
           <Outlet />
         </main>
       </div>
+
+      {showPasswordModal && (
+        <div className="modal-overlay" onClick={() => setShowPasswordModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ width: "min(420px, 90vw)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid var(--line)", paddingBottom: "12px" }}>
+              <h2 className="modal-title" style={{ marginBottom: 0 }}>Cambiar Contraseña</h2>
+              <button onClick={() => setShowPasswordModal(false)} className="btn-icon-danger" style={{ padding: "4px" }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {passwordMsg && (
+              <div className="alert alert-success" style={{ marginBottom: "12px" }}>
+                <span>{passwordMsg}</span>
+              </div>
+            )}
+            {passwordError && (
+              <div className="alert alert-error" style={{ marginBottom: "12px" }}>
+                <span>{passwordError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleChangePassword}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="currentPassword">Contraseña actual</label>
+                <input
+                  id="currentPassword"
+                  type="password"
+                  required
+                  className="form-input"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                />
+              </div>
+              <div className="form-group" style={{ marginTop: "12px" }}>
+                <label className="form-label" htmlFor="newPassword">Nueva contraseña</label>
+                <input
+                  id="newPassword"
+                  type="password"
+                  required
+                  className="form-input"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                />
+              </div>
+              <div className="form-group" style={{ marginTop: "12px" }}>
+                <label className="form-label" htmlFor="confirmPassword">Confirmar nueva contraseña</label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  required
+                  className="form-input"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                />
+              </div>
+              <div className="form-actions" style={{ borderTop: "1px solid var(--line)", marginTop: "20px", paddingTop: "14px" }}>
+                <button type="button" className="btn-secondary" onClick={() => setShowPasswordModal(false)}>Cancelar</button>
+                <button type="submit" className="btn-primary">Cambiar contraseña</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

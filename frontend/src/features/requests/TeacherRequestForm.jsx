@@ -284,7 +284,7 @@ export default function TeacherRequestForm() {
                 className="btn-secondary"
                 style={{ padding: "4px 10px", minHeight: "auto", display: "inline-flex", gap: "4px", fontSize: "13px", marginLeft: "auto" }}
                 onClick={addDateRow}
-                disabled={submitting || getCheckedCoursesList().length === 0}
+                disabled={submitting}
               >
                 <Plus size={14} />
                 Agregar Fecha
@@ -397,7 +397,7 @@ export default function TeacherRequestForm() {
             <button 
               type="submit" 
               className="btn-primary"
-              disabled={submitting || getCheckedCoursesList().length === 0}
+              disabled={submitting}
             >
               {submitting ? "Enviando..." : "Enviar Solicitudes"}
             </button>

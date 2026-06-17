@@ -36,35 +36,38 @@ export const usersByRole = {
 
 export const menuByRole = {
   estudiante: [
-    { label: "Dashboard", path: "/dashboard", icon: "dashboard" },
+    { label: "Inicio", path: "/dashboard", icon: "dashboard" },
     { label: "Nueva solicitud", path: "/nueva-solicitud", icon: "request" },
     { label: "Mis solicitudes", path: "/mis-solicitudes", icon: "history" },
     { label: "Notificaciones", path: "/notificaciones", icon: "notifications" },
   ],
   docente: [
-    { label: "Dashboard", path: "/dashboard", icon: "dashboard" },
+    { label: "Inicio", path: "/dashboard", icon: "dashboard" },
     { label: "Solicitud docente", path: "/solicitud-docente", icon: "teacher" },
     { label: "Asistencia", path: "/asistencia", icon: "attendance" },
     { label: "Notificaciones", path: "/notificaciones", icon: "notifications" },
   ],
   director: [
-    { label: "Dashboard", path: "/dashboard", icon: "dashboard" },
+    { label: "Inicio", path: "/dashboard", icon: "dashboard" },
     { label: "Revision", path: "/revision", icon: "review" },
+    { label: "Rest. Contraseña", path: "/restablecer-contrasena", icon: "key" },
     { label: "Asistencia", path: "/asistencia", icon: "attendance" },
     { label: "Notificaciones", path: "/notificaciones", icon: "notifications" },
     { label: "Reportes", path: "/reportes", icon: "reports" },
     { label: "Auditoria", path: "/auditoria", icon: "audit" },
   ],
   secretario: [
-    { label: "Dashboard", path: "/dashboard", icon: "dashboard" },
+    { label: "Inicio", path: "/dashboard", icon: "dashboard" },
     { label: "Revision", path: "/revision", icon: "review" },
+    { label: "Rest. Contraseña", path: "/restablecer-contrasena", icon: "key" },
     { label: "Catalogos", path: "/catalogos", icon: "catalogs" },
     { label: "Reportes", path: "/reportes", icon: "reports" },
     { label: "Notificaciones", path: "/notificaciones", icon: "notifications" },
   ],
   admin: [
-    { label: "Dashboard", path: "/dashboard", icon: "dashboard" },
+    { label: "Inicio", path: "/dashboard", icon: "dashboard" },
     { label: "Revision", path: "/revision", icon: "review" },
+    { label: "Rest. Contraseña", path: "/restablecer-contrasena", icon: "key" },
     { label: "Usuarios", path: "/usuarios", icon: "users" },
     { label: "Catalogos", path: "/catalogos", icon: "catalogs" },
     { label: "Reportes", path: "/reportes", icon: "reports" },

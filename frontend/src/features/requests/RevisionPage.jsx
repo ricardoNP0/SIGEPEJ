@@ -24,9 +24,18 @@ function statusClass(status) {
   return "pendiente";
 }
 
-function formatDate(value) {
+function formatDateTime(value) {
   if (!value) return "-";
-  return String(value).slice(0, 10);
+  const str = String(value);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str.split("-").reverse().join("/");
+  }
+  const d = new Date(str);
+  if (isNaN(d.getTime())) return str.slice(0, 10);
+  return d.toLocaleString("es-ES", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit"
+  });
 }
 
 export default function RevisionPage() {
@@ -201,7 +210,7 @@ export default function RevisionPage() {
                       <div className="date-list">
                         {(request.dates || []).map((item, index) => (
                           <span key={`${getRequestId(request)}-${index}`}>
-                            {formatDate(item.date)} - {item.courseName || item.courseCode || "Materia"}
+                            {formatDateTime(item.date || item)}
                           </span>
                         ))}
                       </div>

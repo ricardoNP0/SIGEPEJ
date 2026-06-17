@@ -4,6 +4,20 @@ import { AuthContext } from "../../context/AuthContext.jsx";
 import { apiClient } from "../../api/client.js";
 import { FileText, Eye, AlertCircle, RefreshCw, Send, X, ExternalLink, Calendar } from "lucide-react";
 
+function formatDateTime(value) {
+  if (!value) return "-";
+  const str = String(value);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str.split("-").reverse().join("/");
+  }
+  const d = new Date(str);
+  if (isNaN(d.getTime())) return str.slice(0, 10);
+  return d.toLocaleString("es-ES", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit"
+  });
+}
+
 function requestBelongsToUser(request, user) {
   return [
     request.requesterUsername && user?.username && request.requesterUsername === user.username,
@@ -160,7 +174,7 @@ export default function RequestHistoryPage() {
                 <tr>
                   <th>Código</th>
                   <th>Fecha Solicitud</th>
-                  <th>Materias y Fechas Afectadas</th>
+                    <th>Fechas Afectadas</th>
                   <th>Motivo</th>
                   <th>Estado</th>
                   <th>Evidencia</th>
@@ -176,20 +190,11 @@ export default function RequestHistoryPage() {
                         {req.mode.replace("_", " ")}
                       </span>
                     </td>
-                    <td>
-                      {new Date(req.createdAt || Date.now()).toLocaleDateString("es-ES", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit"
-                      })}
-                    </td>
+                    <td>{formatDateTime(req.createdAt)}</td>
                     <td>
                       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                         {req.dates && req.dates.map((d, i) => (
-                          <div key={i} style={{ fontSize: "13px" }}>
-                            <span style={{ fontWeight: "600" }}>{d.courseName}</span>
-                            <span style={{ color: "var(--ink-500)", marginLeft: "6px" }}>({d.date})</span>
-                          </div>
+                          <span key={i} style={{ fontSize: "13px" }}>{formatDateTime(d.date || d)}</span>
                         ))}
                       </div>
                     </td>
@@ -205,11 +210,6 @@ export default function RequestHistoryPage() {
                       <span className={`status-pill ${getStatusClass(req.status)}`}>
                         {req.status}
                       </span>
-                      {req.reviewComment && (
-                        <div style={{ fontSize: "11px", color: "var(--danger)", marginTop: "4px", fontWeight: "600", maxWidth: "160px" }}>
-                          Obs: {req.reviewComment}
-                        </div>
-                      )}
                     </td>
                     <td>
                       {req.evidenceUrl ? (
@@ -328,10 +328,7 @@ export default function RequestHistoryPage() {
                   {selectedRequest.dates.map((d, i) => (
                     <div key={i} style={{ display: "flex", gap: "8px", background: "var(--surface-muted)", padding: "8px", borderRadius: "6px", alignItems: "center" }}>
                       <Calendar size={14} style={{ color: "var(--ink-500)" }} />
-                      <div>
-                        <strong>{d.courseName}</strong>
-                        <div style={{ fontSize: "12px", color: "var(--ink-500)" }}>Código: {d.courseCode} | Fecha: {d.date}</div>
-                      </div>
+                      <span style={{ fontSize: "13px" }}>{formatDateTime(d.date || d)}</span>
                     </div>
                   ))}
                 </div>

@@ -5,19 +5,20 @@ import { Bell, Check, Trash2, Clock } from "lucide-react";
 import "../../styles/global.css";
 
 export default function NotificationsPage() {
-  const { token } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!user) return;
     loadNotifications();
-  }, [token]);
+  }, [user]);
 
   async function loadNotifications() {
     try {
       setLoading(true);
-      const data = await apiClient.getNotifications();
+      const data = await apiClient.getNotifications(user?.username);
       setNotifications(data);
       setError("");
     } catch (err) {

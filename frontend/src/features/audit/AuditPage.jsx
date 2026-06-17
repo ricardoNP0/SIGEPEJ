@@ -38,6 +38,20 @@ export default function AuditPage() {
     loadLogs();
   }, []);
 
+  const getEntityLabel = (entityType) => {
+    switch (entityType) {
+      case "User": return "Usuario";
+      case "Request": return "Solicitud";
+      case "Attendance": return "Asistencia";
+      case "Career": return "Carrera";
+      case "Subject": return "Materia";
+      case "Course": return "Curso";
+      case "Notification": return "Notificación";
+      case "AuditLog": return "Auditoría";
+      default: return entityType || "N/A";
+    }
+  };
+
   const getActionLabel = (action) => {
     switch (action) {
       case "crear_solicitud": return "Creó Solicitud";
@@ -182,7 +196,7 @@ export default function AuditPage() {
                     </td>
                     <td>
                       <code style={{ fontSize: "12px", background: "var(--surface-muted)", padding: "2px 6px", borderRadius: "4px" }}>
-                        {log.entityType || "N/A"}
+                        {getEntityLabel(log.entityType)}
                       </code>
                     </td>
                     <td style={{ textAlign: "right" }}>
@@ -225,7 +239,7 @@ export default function AuditPage() {
                 <strong>Acción:</strong> {getActionLabel(selectedLog.action)} (<code>{selectedLog.action}</code>)
               </div>
               <div>
-                <strong>Entidad:</strong> {selectedLog.entityType || "N/A"} (ID: <code>{selectedLog.entityId || "N/A"}</code>)
+                <strong>Entidad:</strong> {getEntityLabel(selectedLog.entityType)} (ID: <code>{selectedLog.entityId || "N/A"}</code>)
               </div>
               <div>
                 <strong>Fecha y Hora:</strong> {new Date(selectedLog.createdAt || Date.now()).toLocaleString("es-ES")}

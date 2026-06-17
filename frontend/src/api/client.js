@@ -120,7 +120,7 @@ const MOCK_COURSES = [
 const INITIAL_MOCK_REQUESTS = [
   {
     id: "req-001",
-    code: "SOL-2026-001",
+    code: "SOL-EST-2026-001",
     requesterUsername: "ricardo_np",
     requesterName: "Ricardo Nunez del Prado",
     requesterRole: "estudiante",
@@ -137,7 +137,7 @@ const INITIAL_MOCK_REQUESTS = [
   },
   {
     id: "req-002",
-    code: "SOL-2026-002",
+    code: "SOL-EST-2026-002",
     requesterUsername: "daniel_escobar",
     requesterName: "Daniel Escobar Pozo",
     requesterRole: "estudiante",
@@ -155,7 +155,7 @@ const INITIAL_MOCK_REQUESTS = [
   },
   {
     id: "req-003",
-    code: "SOL-2026-003",
+    code: "SOL-DOC-2026-003",
     requesterUsername: "ana_rojas",
     requesterName: "Ana Rojas",
     requesterRole: "docente",
@@ -175,10 +175,11 @@ const INITIAL_MOCK_REQUESTS = [
   }
 ];
 
-// Default seed notifications
+// Default seed notifications (each with a user field for per-user filtering)
 const INITIAL_MOCK_NOTIFICATIONS = [
   {
     _id: "notif-001",
+    user: "ricardo_np",
     title: "Solicitud aprobada",
     message: "Tu solicitud de ausencia ha sido aprobada",
     type: "solicitud",
@@ -187,6 +188,7 @@ const INITIAL_MOCK_NOTIFICATIONS = [
   },
   {
     _id: "notif-002",
+    user: "ricardo_np",
     title: "Solicitud observada",
     message: "Necesitas adjuntar documentación para tu solicitud",
     type: "revision",
@@ -195,11 +197,30 @@ const INITIAL_MOCK_NOTIFICATIONS = [
   },
   {
     _id: "notif-003",
+    user: "ricardo_np",
     title: "Nueva asistencia registrada",
     message: "Se ha registrado tu asistencia en Programación Web III",
     type: "asistencia",
     read: true,
     createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    _id: "notif-004",
+    user: "ana_rojas",
+    title: "Licencia aprobada",
+    message: "Tu solicitud de ausencia docente ha sido aprobada por Direccion",
+    type: "revision",
+    read: false,
+    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    _id: "notif-005",
+    user: "director_sistemas",
+    title: "Nueva solicitud pendiente",
+    message: "Hay una nueva solicitud de ausencia esperando revision",
+    type: "solicitud",
+    read: false,
+    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
   }
 ];
 
@@ -333,6 +354,24 @@ function getMockUsers() {
 
 function saveMockUsers(users) {
   localStorage.setItem("sigepej_mock_users", JSON.stringify(users));
+}
+
+// Password override store — persists password changes for ALL users (including MOCK_USERS)
+function getPasswordStore() {
+  try { return JSON.parse(localStorage.getItem("sigepej_mock_passwords")) || {}; }
+  catch { return {}; }
+}
+function savePasswordStore(store) {
+  localStorage.setItem("sigepej_mock_passwords", JSON.stringify(store));
+}
+
+// Password reset request store
+function getMockResetRequests() {
+  try { return JSON.parse(localStorage.getItem("sigepej_mock_reset_requests")) || []; }
+  catch { return []; }
+}
+function saveMockResetRequests(requests) {
+  localStorage.setItem("sigepej_mock_reset_requests", JSON.stringify(requests));
 }
 
 function getMockCareers() {
@@ -516,6 +555,39 @@ function getHeaders(isMultipart = false) {
   return headers;
 }
 
+// Notify all reviewer roles (admin, director, secretario)
+function notifyReviewers(title, message, type = "solicitud") {
+  const notifications = getMockNotifications();
+  const reviewerUsernames = ["admin", "director_sistemas", "secretaria_sistemas"];
+  reviewerUsernames.forEach(username => {
+    notifications.unshift({
+      _id: `notif-${Date.now()}-${username}`,
+      user: username,
+      title,
+      message,
+      type,
+      read: false,
+      createdAt: new Date().toISOString()
+    });
+  });
+  saveMockNotifications(notifications);
+}
+
+// Notify the request owner
+function notifyOwner(username, title, message, type = "revision") {
+  const notifications = getMockNotifications();
+  notifications.unshift({
+    _id: `notif-${Date.now()}-${username}`,
+    user: username,
+    title,
+    message,
+    type,
+    read: false,
+    createdAt: new Date().toISOString()
+  });
+  saveMockNotifications(notifications);
+}
+
 export const apiClient = {
   // Login
   async login(usernameOrEmail, password) {
@@ -540,12 +612,15 @@ export const apiClient = {
       if (error.isApiResponse) throw error;
       console.warn("Backend login failed or unavailable, falling back to mock database:", error.message);
 
-      // Fallback Mock Authentication
-      const user = MOCK_USERS.find(
-        (u) =>
-          (u.username === usernameOrEmail || u.email === usernameOrEmail) &&
-          password === "password123"
-      );
+      // Fallback Mock Authentication — merge hardcoded + localStorage users
+      const localUsers = getMockUsers() || [];
+      const allUsers = [...MOCK_USERS, ...localUsers];
+      const passwordStore = getPasswordStore();
+      const user = allUsers.find((u) => {
+        const storedPassword = passwordStore[u.username];
+        const expectedPassword = storedPassword || u.password || "password123";
+        return (u.username === usernameOrEmail || u.email === usernameOrEmail) && password === expectedPassword;
+      });
 
       if (user) {
         return {
@@ -563,6 +638,156 @@ export const apiClient = {
       }
 
       throw new Error("Credenciales incorrectas. Verifique su usuario y contrasena.");
+    }
+  },
+
+  async updatePassword(username, currentPassword, newPassword) {
+    try {
+      const response = await fetch(`${API_URL}/users/${username}/password`, {
+        method: "PATCH",
+        headers: getHeaders(),
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+      if (response.ok) return await response.json();
+      throw await buildApiError(response, "Error al cambiar la contrasena");
+    } catch (error) {
+      if (error.isApiResponse) throw error;
+      console.warn("Backend updatePassword failed, using mock data:", error.message);
+
+      const localUsers = getMockUsers() || [];
+      const combined = [...MOCK_USERS, ...localUsers];
+      const user = combined.find(u => u.username === username);
+      if (!user) throw new Error("Usuario no encontrado.");
+
+      const passwordStore = getPasswordStore();
+      const expectedCurrent = passwordStore[username] || user.password || "password123";
+      if (expectedCurrent !== currentPassword) {
+        throw new Error("La contrasena actual no es correcta.");
+      }
+
+      // Persist via the password override store (works for ALL users)
+      passwordStore[username] = newPassword;
+      savePasswordStore(passwordStore);
+
+      return { success: true };
+    }
+  },
+
+  async createPasswordResetRequest({ username, email, fullName }) {
+    try {
+      const response = await fetch(`${API_URL}/auth/password-reset-request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, fullName })
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error creating reset request");
+    } catch (error) {
+      console.warn("Backend reset request failed, using mock data:", error.message);
+      const requests = getMockResetRequests();
+      const existing = requests.find(r => r.username === username && r.status === "pendiente");
+      if (existing) throw new Error("Ya tienes una solicitud de restablecimiento pendiente.");
+
+      const newRequest = {
+        _id: `reset-${Date.now()}`,
+        username,
+        email,
+        fullName: fullName || username,
+        status: "pendiente",
+        createdAt: new Date().toISOString()
+      };
+      requests.unshift(newRequest);
+      saveMockResetRequests(requests);
+
+      // Notify approvers
+      notifyReviewers(
+        "Solicitud de restablecimiento de contraseña",
+        `${fullName || username} (${email}) ha solicitado restablecer su contraseña.`,
+        "reset_password"
+      );
+
+      return newRequest;
+    }
+  },
+
+  async getPasswordResetRequests() {
+    try {
+      const response = await fetch(`${API_URL}/auth/password-reset-requests`, {
+        headers: getHeaders()
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error fetching reset requests");
+    } catch (error) {
+      console.warn("Backend getPasswordResetRequests failed, using mock data:", error.message);
+      return getMockResetRequests();
+    }
+  },
+
+  async approvePasswordResetRequest(requestId, approvedBy) {
+    try {
+      const response = await fetch(`${API_URL}/auth/password-reset-requests/${requestId}/approve`, {
+        method: "PATCH",
+        headers: getHeaders(),
+        body: JSON.stringify({ approvedBy })
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error approving reset request");
+    } catch (error) {
+      console.warn("Backend approvePasswordResetRequest failed, using mock data:", error.message);
+      const requests = getMockResetRequests();
+      const req = requests.find(r => r._id === requestId);
+      if (!req) throw new Error("Solicitud no encontrada.");
+      if (req.status !== "pendiente") throw new Error("La solicitud ya fue procesada.");
+
+      req.status = "aprobada";
+      req.approvedBy = approvedBy;
+      req.resolvedAt = new Date().toISOString();
+      saveMockResetRequests(requests);
+
+      // Reset password to default
+      const passwordStore = getPasswordStore();
+      delete passwordStore[req.username];
+      savePasswordStore(passwordStore);
+
+      // Notify user via notification (simulating email)
+      notifyOwner(
+        req.username,
+        "Contraseña restablecida",
+        "Su contraseña ha sido restablecida a la contraseña por defecto: password123. Por favor, inicie sesión y cámbiela."
+      );
+
+      return req;
+    }
+  },
+
+  async rejectPasswordResetRequest(requestId, rejectedBy) {
+    try {
+      const response = await fetch(`${API_URL}/auth/password-reset-requests/${requestId}/reject`, {
+        method: "PATCH",
+        headers: getHeaders(),
+        body: JSON.stringify({ rejectedBy })
+      });
+      if (response.ok) return await response.json();
+      throw new Error("API error rejecting reset request");
+    } catch (error) {
+      console.warn("Backend rejectPasswordResetRequest failed, using mock data:", error.message);
+      const requests = getMockResetRequests();
+      const req = requests.find(r => r._id === requestId);
+      if (!req) throw new Error("Solicitud no encontrada.");
+      if (req.status !== "pendiente") throw new Error("La solicitud ya fue procesada.");
+
+      req.status = "rechazada";
+      req.rejectedBy = rejectedBy;
+      req.resolvedAt = new Date().toISOString();
+      saveMockResetRequests(requests);
+
+      notifyOwner(
+        req.username,
+        "Solicitud de restablecimiento rechazada",
+        "Su solicitud de restablecimiento de contraseña ha sido rechazada. Comuníquese con el administrador."
+      );
+
+      return req;
     }
   },
 
@@ -683,7 +908,8 @@ export const apiClient = {
       const courses = dates.map(d => d.courseCode);
       const requests = getMockRequests();
       const currentUser = JSON.parse(localStorage.getItem("sigepej_user")) || {};
-      const newCode = `SOL-2026-${String(requests.length + 1).padStart(3, "0")}`;
+      const rolePrefix = requesterRole === "docente" ? "DOC" : "EST";
+      const newCode = `SOL-${rolePrefix}-2026-${String(requests.length + 1).padStart(3, "0")}`;
 
       const newRequest = {
         id: `req-${Date.now()}`,
@@ -707,6 +933,15 @@ export const apiClient = {
 
       requests.unshift(newRequest);
       saveMockRequests(requests);
+
+      // Notify reviewers about the new request
+      const requesterDisplay = `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim() || "Alguien";
+      notifyReviewers(
+        "Nueva solicitud pendiente",
+        `${requesterDisplay} ha creado una solicitud de ${requestType === "ausencia_docente" ? "ausencia docente" : "ausencia estudiantil"} (${newCode})`,
+        "solicitud"
+      );
+
       return { ok: true, request: newRequest };
     }
   },
@@ -740,6 +975,16 @@ export const apiClient = {
         requests[idx].status = "pendiente";
         requests[idx].reviewComment = "";
         saveMockRequests(requests);
+
+        // Notify reviewers that the request was corrected
+        const currentUser = JSON.parse(localStorage.getItem("sigepej_user")) || {};
+        const requesterDisplay = `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim() || "Alguien";
+        notifyReviewers(
+          "Solicitud corregida y reenviada",
+          `${requesterDisplay} ha corregido y reenviado la solicitud ${requests[idx].code || ""}`,
+          "solicitud"
+        );
+
         return { ok: true, request: requests[idx] };
       }
       throw new Error("Solicitud no encontrada en mock DB");
@@ -770,6 +1015,16 @@ export const apiClient = {
         requests[idx].appealComment = justification;
         requests[idx].reviewComment = "";
         saveMockRequests(requests);
+
+        // Notify reviewers about the appeal
+        const currentUser = JSON.parse(localStorage.getItem("sigepej_user")) || {};
+        const requesterDisplay = `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim() || "Alguien";
+        notifyReviewers(
+          "Solicitud apelada",
+          `${requesterDisplay} ha apelado la solicitud ${requests[idx].code || ""}: "${justification}"`,
+          "revision"
+        );
+
         return { ok: true, request: requests[idx] };
       }
       throw new Error("Solicitud no encontrada en mock DB");
@@ -777,7 +1032,7 @@ export const apiClient = {
   },
 
   // Notifications
-  async getNotifications() {
+  async getNotifications(username) {
     try {
       const response = await fetch(`${API_URL}/notifications`, {
         headers: getHeaders()
@@ -789,8 +1044,11 @@ export const apiClient = {
       throw new Error("API error fetching notifications");
     } catch (error) {
       console.warn("Backend getNotifications failed, using mock data:", error.message);
-      // Get from localStorage
+      // Get from localStorage and filter by current user
       const notifications = getMockNotifications();
+      if (username) {
+        return notifications.filter(n => !n.user || n.user === username);
+      }
       return notifications;
     }
   },
@@ -817,7 +1075,7 @@ export const apiClient = {
     }
   },
 
-  async markAllNotificationsAsRead() {
+  async markAllNotificationsAsRead(username) {
     try {
       const response = await fetch(`${API_URL}/notifications/read/all`, {
         method: "PATCH",
@@ -827,11 +1085,13 @@ export const apiClient = {
       throw new Error("API error marking all notifications as read");
     } catch (error) {
       console.warn("Backend markAllNotificationsAsRead failed:", error.message);
-      // Update all in localStorage
+      // Update all for this user in localStorage
       const notifications = getMockNotifications();
       notifications.forEach(n => {
-        n.read = true;
-        n.readAt = new Date().toISOString();
+        if (!username || !n.user || n.user === username) {
+          n.read = true;
+          n.readAt = new Date().toISOString();
+        }
       });
       saveMockNotifications(notifications);
       return { message: "Mock: all marked as read" };
@@ -909,6 +1169,7 @@ export const apiClient = {
         _id: `usr-${userData.username}`,
         id: `usr-${userData.username}`,
         ...userData,
+        password: userData.password || "password123",
         isActive: true
       };
 
@@ -1199,10 +1460,45 @@ export const apiClient = {
       const idx = requests.findIndex((request) => request.id === id || request._id === id || request.code === id);
       if (idx === -1) throw new Error("Solicitud no encontrada en mock DB");
 
-      requests[idx].status = normalizeStatus(status);
+      const newStatus = normalizeStatus(status);
+      requests[idx].status = newStatus;
       requests[idx].reviewComment = reviewComment;
       requests[idx].reviewedAt = new Date().toISOString();
       saveMockRequests(requests);
+
+      // Notify the request owner
+      const ownerUser = requests[idx].requesterUsername || requests[idx].requester?.username;
+      const statusLabels = { aprobado: "aprobada", observado: "observada", rechazado: "rechazada" };
+      const statusLabel = statusLabels[newStatus] || newStatus;
+      if (ownerUser) {
+        notifyOwner(
+          ownerUser,
+          `Solicitud ${statusLabel}`,
+          `Tu solicitud ${requests[idx].code || ""} ha sido ${statusLabel}${reviewComment ? ": " + reviewComment : ""}`,
+          "revision"
+        );
+      }
+
+      // Notify other reviewers that this request was already reviewed
+      const currentUser = JSON.parse(localStorage.getItem("sigepej_user")) || {};
+      const reviewerName = `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim() || "Un revisor";
+      const reviewerUsernames = ["admin", "director_sistemas", "secretaria_sistemas"].filter(
+        u => u !== currentUser.username
+      );
+      const notifications = getMockNotifications();
+      reviewerUsernames.forEach(username => {
+        notifications.unshift({
+          _id: `notif-${Date.now()}-${username}`,
+          user: username,
+          title: `Solicitud ${statusLabel} por ${reviewerName}`,
+          message: `La solicitud ${requests[idx].code || ""} fue ${statusLabel} por ${reviewerName}${reviewComment ? ": " + reviewComment : ""}`,
+          type: "revision",
+          read: false,
+          createdAt: new Date().toISOString()
+        });
+      });
+      saveMockNotifications(notifications);
+
       return { ok: true, request: normalizeRequest(requests[idx]) };
     }
   },
@@ -1261,6 +1557,42 @@ export const apiClient = {
     } catch (error) {
       console.warn("Backend updateAttendance failed, updating mock data:", error.message);
       return saveMockAttendanceRecord(recordId, status, note);
+    }
+  },
+
+  // Get a student's absences (F marks) from all attendance records
+  async getStudentAbsences(studentCode) {
+    try {
+      const response = await fetch(`${API_URL}/attendance/student/${studentCode}/absences`, {
+        headers: getHeaders()
+      });
+      if (response.ok) return await response.json();
+      throw new Error();
+    } catch (error) {
+      console.warn("Backend getStudentAbsences failed, scanning localStorage:", error.message);
+      const keys = Object.keys(localStorage).filter(k => k.startsWith("sigepej_mock_attendance_"));
+      const absences = [];
+      for (const key of keys) {
+        const attendance = JSON.parse(localStorage.getItem(key));
+        const parts = key.replace("sigepej_mock_attendance_", "").split("_");
+        const courseCode = parts[0];
+        const date = parts.slice(1).join("_");
+        for (const record of (attendance.records || [])) {
+          const studentId = record.student?.id || record.student?.code || record.studentId || record.studentCode;
+          if (studentId === studentCode && record.status === "F") {
+            const courseName = attendance.course?.subjectName || attendance.course?.name || courseCode;
+            absences.push({
+              date,
+              course: courseName,
+              courseCode,
+              status: "F",
+              justified: false,
+              source: "attendance"
+            });
+          }
+        }
+      }
+      return absences;
     }
   }
 };
