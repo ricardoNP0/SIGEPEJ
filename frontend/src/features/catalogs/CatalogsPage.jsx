@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { apiClient } from "../../api/client.js";
 import {
   BookOpen,
@@ -37,11 +37,9 @@ export default function CatalogsPage() {
     teacher: "",
     parallel: "G1",
     period: "2026-1",
-    scheduleDays: [],
-    scheduleDay: "lunes",
-    scheduleStart: "08:00",
-    scheduleEnd: "10:00",
-    scheduleClassroom: "Lab 3"
+    schedule: [
+      { day: "lunes", startTime: "08:00", endTime: "10:00", classroom: "Lab 3" }
+    ]
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -63,7 +61,7 @@ export default function CatalogsPage() {
       setUsers(usersData);
     } catch (err) {
       console.error(err);
-      setError("Error al cargar los catálogos académicos.");
+      setError("Error al cargar los catÃ¡logos acadÃ©micos.");
     } finally {
       setLoading(false);
     }
@@ -82,7 +80,7 @@ export default function CatalogsPage() {
       setCareers(prev => [...prev, created]);
       setIsCareerModalOpen(false);
       setCareerForm({ code: "", name: "", director: "" });
-      setSuccess("Carrera creada con éxito.");
+      setSuccess("Carrera creada con Ã©xito.");
       setTimeout(() => setSuccess(""), 4000);
     } catch (err) {
       setFormError(err.message || "Error al crear la carrera.");
@@ -100,7 +98,7 @@ export default function CatalogsPage() {
       setSubjects(prev => [...prev, created]);
       setIsSubjectModalOpen(false);
       setSubjectForm({ code: "", name: "", career: "", semester: 1 });
-      setSuccess("Materia creada con éxito.");
+      setSuccess("Materia creada con Ã©xito.");
       setTimeout(() => setSuccess(""), 4000);
     } catch (err) {
       setFormError(err.message || "Error al crear la materia.");
@@ -114,14 +112,27 @@ export default function CatalogsPage() {
     setFormError("");
     setSubmitting(true);
 
-    const schedule = [
-      {
-        day: courseForm.scheduleDay,
-        startTime: courseForm.scheduleStart,
-        endTime: courseForm.scheduleEnd,
-        classroom: courseForm.scheduleClassroom
-      }
-    ];
+    const schedule = courseForm.schedule
+      .filter((item) => item.day && item.startTime && item.endTime && item.classroom.trim())
+      .map((item) => ({
+        day: item.day,
+        startTime: item.startTime,
+        endTime: item.endTime,
+        classroom: item.classroom.trim()
+      }));
+
+    if (schedule.length === 0) {
+      setFormError("Debe registrar al menos un horario para el paralelo.");
+      setSubmitting(false);
+      return;
+    }
+
+    const invalidHour = schedule.find((item) => item.startTime >= item.endTime);
+    if (invalidHour) {
+      setFormError("La hora de inicio debe ser menor que la hora de fin en todos los horarios.");
+      setSubmitting(false);
+      return;
+    }
 
     try {
       const created = await apiClient.createCourse({
@@ -142,13 +153,11 @@ export default function CatalogsPage() {
         teacher: "",
         parallel: "G1",
         period: "2026-1",
-        scheduleDays: [],
-        scheduleDay: "lunes",
-        scheduleStart: "08:00",
-        scheduleEnd: "10:00",
-        scheduleClassroom: "Lab 3"
+        schedule: [
+          { day: "lunes", startTime: "08:00", endTime: "10:00", classroom: "Lab 3" }
+        ]
       });
-      setSuccess("Paralelo/Curso creado con éxito.");
+      setSuccess("Paralelo/Curso creado con Ã©xito.");
       setTimeout(() => setSuccess(""), 4000);
     } catch (err) {
       setFormError(err.message || "Error al crear el curso.");
@@ -160,13 +169,41 @@ export default function CatalogsPage() {
   const directors = users.filter(u => u.role === "director");
   const teachers = users.filter(u => u.role === "docente");
 
+  const addScheduleRow = () => {
+    setCourseForm((prev) => ({
+      ...prev,
+      schedule: [
+        ...prev.schedule,
+        { day: "martes", startTime: "08:00", endTime: "10:00", classroom: "Aula 1" }
+      ]
+    }));
+  };
+
+  const updateScheduleRow = (index, field, value) => {
+    setCourseForm((prev) => ({
+      ...prev,
+      schedule: prev.schedule.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
+      )
+    }));
+  };
+
+  const removeScheduleRow = (index) => {
+    setCourseForm((prev) => ({
+      ...prev,
+      schedule: prev.schedule.length === 1
+        ? prev.schedule
+        : prev.schedule.filter((_, i) => i !== index)
+    }));
+  };
+
   return (
     <section className="content-stack">
       <div className="page-heading">
-        <span className="eyebrow">Administración</span>
-        <h1>Catálogos Académicos</h1>
+        <span className="eyebrow">AdministraciÃ³n</span>
+        <h1>CatÃ¡logos AcadÃ©micos</h1>
         <p>
-          Configure las estructuras de la institución: Carreras profesionales, materias del plan de estudios, y asignaciones de paralelos y docentes.
+          Configure las estructuras de la instituciÃ³n: Carreras profesionales, materias del plan de estudios, y asignaciones de paralelos y docentes.
         </p>
       </div>
 
@@ -220,7 +257,7 @@ export default function CatalogsPage() {
       {loading ? (
         <div style={{ padding: "40px 0", textAlign: "center", color: "var(--ink-500)" }}>
           <RefreshCw size={24} className="spin" style={{ marginBottom: "12px" }} />
-          <p>Cargando información del catálogo académico...</p>
+          <p>Cargando informaciÃ³n del catÃ¡logo acadÃ©mico...</p>
         </div>
       ) : (
         <>
@@ -229,7 +266,7 @@ export default function CatalogsPage() {
             <div className="surface-panel">
               <div className="panel-header">
                 <div>
-                  <span className="eyebrow">Catálogo</span>
+                  <span className="eyebrow">CatÃ¡logo</span>
                   <h2>Carreras Universitarias</h2>
                 </div>
                 <button
@@ -251,7 +288,7 @@ export default function CatalogsPage() {
                   <table className="custom-table">
                     <thead>
                       <tr>
-                        <th>Código</th>
+                        <th>CÃ³digo</th>
                         <th>Nombre Carrera</th>
                         <th>Director Asignado</th>
                         <th>Estado</th>
@@ -280,7 +317,7 @@ export default function CatalogsPage() {
             <div className="surface-panel">
               <div className="panel-header">
                 <div>
-                  <span className="eyebrow">Catálogo</span>
+                  <span className="eyebrow">CatÃ¡logo</span>
                   <h2>Materias de Plan de Estudios</h2>
                 </div>
                 <button
@@ -302,7 +339,7 @@ export default function CatalogsPage() {
                   <table className="custom-table">
                     <thead>
                       <tr>
-                        <th>Código</th>
+                        <th>CÃ³digo</th>
                         <th>Nombre Materia</th>
                         <th>Carrera</th>
                         <th>Semestre</th>
@@ -333,7 +370,7 @@ export default function CatalogsPage() {
             <div className="surface-panel">
               <div className="panel-header">
                 <div>
-                  <span className="eyebrow">Catálogo</span>
+                  <span className="eyebrow">CatÃ¡logo</span>
                   <h2>Asignaciones de Paralelos (Cursos)</h2>
                 </div>
                 <button
@@ -348,14 +385,14 @@ export default function CatalogsPage() {
 
               {courses.length === 0 ? (
                 <div style={{ padding: "30px", textAlign: "center", color: "var(--ink-500)" }}>
-                  Ninguna asignación de curso registrada.
+                  Ninguna asignaciÃ³n de curso registrada.
                 </div>
               ) : (
                 <div className="history-table-container">
                   <table className="custom-table">
                     <thead>
                       <tr>
-                        <th>Código Paralelo</th>
+                        <th>CÃ³digo Paralelo</th>
                         <th>Materia</th>
                         <th>Carrera</th>
                         <th>Docente</th>
@@ -397,7 +434,7 @@ export default function CatalogsPage() {
         <div className="modal-overlay" onClick={() => setIsCareerModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid var(--line)", paddingBottom: "12px" }}>
-              <h2 className="modal-title" style={{ marginBottom: 0 }}>Crear Carrera Académica</h2>
+              <h2 className="modal-title" style={{ marginBottom: 0 }}>Crear Carrera AcadÃ©mica</h2>
               <button onClick={() => setIsCareerModalOpen(false)} className="btn-icon-danger"><X size={20} /></button>
             </div>
 
@@ -405,7 +442,7 @@ export default function CatalogsPage() {
 
             <form onSubmit={handleCreateCareer}>
               <div className="form-group">
-                <label className="form-label" htmlFor="careerCode">Código de Carrera *</label>
+                <label className="form-label" htmlFor="careerCode">CÃ³digo de Carrera *</label>
                 <input
                   id="careerCode"
                   type="text"
@@ -424,7 +461,7 @@ export default function CatalogsPage() {
                   type="text"
                   required
                   className="form-input"
-                  placeholder="ej. Ingeniería de Sistemas"
+                  placeholder="ej. IngenierÃ­a de Sistemas"
                   value={careerForm.name}
                   onChange={(e) => setCareerForm(prev => ({ ...prev, name: e.target.value }))}
                 />
@@ -467,7 +504,7 @@ export default function CatalogsPage() {
 
             <form onSubmit={handleCreateSubject}>
               <div className="form-group">
-                <label className="form-label" htmlFor="subCode">Código Materia *</label>
+                <label className="form-label" htmlFor="subCode">CÃ³digo Materia *</label>
                 <input
                   id="subCode"
                   type="text"
@@ -486,7 +523,7 @@ export default function CatalogsPage() {
                   type="text"
                   required
                   className="form-input"
-                  placeholder="ej. Programación Web III"
+                  placeholder="ej. ProgramaciÃ³n Web III"
                   value={subjectForm.name}
                   onChange={(e) => setSubjectForm(prev => ({ ...prev, name: e.target.value }))}
                 />
@@ -536,7 +573,7 @@ export default function CatalogsPage() {
         <div className="modal-overlay" onClick={() => setIsCourseModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ width: "min(560px, 90vw)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid var(--line)", paddingBottom: "12px" }}>
-              <h2 className="modal-title" style={{ marginBottom: 0 }}>Crear Paralelo / Asignación</h2>
+              <h2 className="modal-title" style={{ marginBottom: 0 }}>Crear Paralelo / AsignaciÃ³n</h2>
               <button onClick={() => setIsCourseModalOpen(false)} className="btn-icon-danger"><X size={20} /></button>
             </div>
 
@@ -544,7 +581,7 @@ export default function CatalogsPage() {
 
             <form onSubmit={handleCreateCourse}>
               <div className="form-group">
-                <label className="form-label" htmlFor="coCode">Código Paralelo Único *</label>
+                <label className="form-label" htmlFor="coCode">CÃ³digo Paralelo Ãšnico *</label>
                 <input
                   id="coCode"
                   type="text"
@@ -635,52 +672,87 @@ export default function CatalogsPage() {
 
               {/* Schedule Sub-form */}
               <div style={{ border: "1px solid var(--line)", padding: "12px", borderRadius: "8px", background: "var(--surface-muted)" }}>
-                <h3 style={{ margin: "0 0 10px 0", fontSize: "14px" }}>Horario de Clases</h3>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Día</label>
-                    <select
-                      className="form-select"
-                      value={courseForm.scheduleDay}
-                      onChange={(e) => setCourseForm(prev => ({ ...prev, scheduleDay: e.target.value }))}
-                    >
-                      <option value="lunes">Lunes</option>
-                      <option value="martes">Martes</option>
-                      <option value="miercoles">Miércoles</option>
-                      <option value="jueves">Jueves</option>
-                      <option value="viernes">Viernes</option>
-                      <option value="sabado">Sábado</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Aula</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={courseForm.scheduleClassroom}
-                      onChange={(e) => setCourseForm(prev => ({ ...prev, scheduleClassroom: e.target.value }))}
-                    />
-                  </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
+                  <h3 style={{ margin: 0, fontSize: "14px" }}>Horarios de clases</h3>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ minHeight: "32px", padding: "6px 10px", display: "inline-flex", gap: "6px" }}
+                    onClick={addScheduleRow}
+                    disabled={submitting}
+                  >
+                    <Plus size={14} />
+                    Agregar horario
+                  </button>
                 </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Hora Inicio</label>
-                    <input
-                      type="time"
-                      className="form-input"
-                      value={courseForm.scheduleStart}
-                      onChange={(e) => setCourseForm(prev => ({ ...prev, scheduleStart: e.target.value }))}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Hora Fin</label>
-                    <input
-                      type="time"
-                      className="form-input"
-                      value={courseForm.scheduleEnd}
-                      onChange={(e) => setCourseForm(prev => ({ ...prev, scheduleEnd: e.target.value }))}
-                    />
-                  </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {courseForm.schedule.map((schedule, index) => (
+                    <div
+                      key={`${schedule.day}-${index}`}
+                      style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1fr 1.2fr auto", gap: "8px", alignItems: "end" }}
+                    >
+                      <label className="form-group" style={{ marginBottom: 0 }}>
+                        <span className="form-label">Día</span>
+                        <select
+                          className="form-select"
+                          value={schedule.day}
+                          onChange={(e) => updateScheduleRow(index, "day", e.target.value)}
+                          disabled={submitting}
+                        >
+                          <option value="lunes">Lunes</option>
+                          <option value="martes">Martes</option>
+                          <option value="miercoles">Miércoles</option>
+                          <option value="jueves">Jueves</option>
+                          <option value="viernes">Viernes</option>
+                          <option value="sabado">Sábado</option>
+                        </select>
+                      </label>
+
+                      <label className="form-group" style={{ marginBottom: 0 }}>
+                        <span className="form-label">Inicio</span>
+                        <input
+                          type="time"
+                          className="form-input"
+                          value={schedule.startTime}
+                          onChange={(e) => updateScheduleRow(index, "startTime", e.target.value)}
+                          disabled={submitting}
+                        />
+                      </label>
+
+                      <label className="form-group" style={{ marginBottom: 0 }}>
+                        <span className="form-label">Fin</span>
+                        <input
+                          type="time"
+                          className="form-input"
+                          value={schedule.endTime}
+                          onChange={(e) => updateScheduleRow(index, "endTime", e.target.value)}
+                          disabled={submitting}
+                        />
+                      </label>
+
+                      <label className="form-group" style={{ marginBottom: 0 }}>
+                        <span className="form-label">Aula</span>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={schedule.classroom}
+                          onChange={(e) => updateScheduleRow(index, "classroom", e.target.value)}
+                          disabled={submitting}
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        className="btn-icon-danger"
+                        title="Quitar horario"
+                        onClick={() => removeScheduleRow(index)}
+                        disabled={submitting || courseForm.schedule.length === 1}
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -695,3 +767,4 @@ export default function CatalogsPage() {
     </section>
   );
 }
+
